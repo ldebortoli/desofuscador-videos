@@ -6,7 +6,7 @@ Entregar una aplicacion Windows independiente y de solo lectura para detectar el
 
 ## Tarea actual
 
-No hay una implementacion activa. Clip Cache Inspector 0.1.0 quedo completado, validado y preparado para publicacion en `main`.
+No hay una implementacion activa. Clip Cache Inspector 0.1.0 quedo completado, validado y publicado en `main`; el commit de implementacion es `b41c57275064a0bbb217347a2c5b09a05eca3d9a`.
 
 ## Estado actual
 
