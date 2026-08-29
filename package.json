@@ -1,0 +1,78 @@
+{
+  "name": "clip-cache-inspector",
+  "version": "0.1.0",
+  "description": "Aplicacion Windows de solo lectura para localizar MP4 internos de CapCut",
+  "main": "./out/main/index.js",
+  "author": "Lucas De Bortoli",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "node node_modules/electron/install.js",
+    "dev": "electron-vite dev",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "npm run build && node tests/electron-smoke.mjs",
+    "check:version": "node scripts/check-version.mjs",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "audit": "npm audit --omit=dev --audit-level=high",
+    "quality": "npm run lint && npm run format:check && npm run typecheck && npm run check:version && npm run scan:secrets",
+    "build": "npm run typecheck && electron-vite build",
+    "package": "npm run build && electron-builder --win portable",
+    "install:shortcut": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Install-WindowsShortcut.ps1"
+  },
+  "dependencies": {
+    "lucide-react": "1.31.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@electron-toolkit/utils": "4.0.0",
+    "@eslint/js": "9.39.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.0",
+    "@types/node": "24.10.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "5.1.4",
+    "@vitest/coverage-v8": "4.1.10",
+    "electron": "43.3.0",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "eslint": "9.39.1",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "eslint-plugin-react-refresh": "0.4.24",
+    "globals": "16.5.0",
+    "jsdom": "27.0.1",
+    "playwright-core": "1.62.1",
+    "prettier": "3.7.4",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.48.0",
+    "vite": "7.3.6",
+    "vitest": "4.1.10"
+  },
+  "build": {
+    "appId": "com.local.clipcacheinspector",
+    "productName": "Clip Cache Inspector",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "build/icon.ico",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "portable"
+      ],
+      "artifactName": "Clip-Cache-Inspector-${version}-${arch}.${ext}"
+    }
+  }
+}

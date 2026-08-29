@@ -1,0 +1,15 @@
+node_modules/
+out/
+release/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+*.pid
+*.tsbuildinfo
+*.sqlite*
+.DS_Store
+Thumbs.db
+.codex/qa-*.png
+.codex/qa-*.json
