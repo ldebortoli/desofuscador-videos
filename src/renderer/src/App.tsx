@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  BookOpenCheck,
   Check,
   CircleAlert,
   Copy,
+  ExternalLink,
   FileVideo2,
   FolderOpen,
   HardDrive,
@@ -113,6 +115,46 @@ export default function App(): React.JSX.Element {
           </button>
         </section>
 
+        <section className="export-guide" aria-labelledby="export-guide-title">
+          <div className="aside-heading">
+            <span>
+              <BookOpenCheck size={19} />
+            </span>
+            <div>
+              <small>DESPUES DE EDITAR</small>
+              <h2 id="export-guide-title">Guia rapida de exportacion</h2>
+            </div>
+          </div>
+          <ol className="guide-list">
+            <GuideStep number="1" title="Revisa el proyecto">
+              Reproduce la linea de tiempo completa y confirma imagen, audio y duracion.
+            </GuideStep>
+            <GuideStep number="2" title="Pulsa Exportar">
+              Esta arriba a la derecha. Elige el nombre y la carpeta de destino.
+            </GuideStep>
+            <GuideStep number="3" title="Configura el MP4">
+              Usa MP4 con H.264 y conserva la resolucion y los FPS de tu material.
+            </GuideStep>
+            <GuideStep number="4" title="Espera al 100%">
+              Al terminar, pulsa Abrir carpeta en CapCut para ver el archivo final.
+            </GuideStep>
+          </ol>
+          <div className="guide-footer">
+            <div className="guide-license-note">
+              Si CapCut marca recursos Pro, reemplazalos por alternativas gratuitas o usa una licencia activa.
+            </div>
+            <a
+              className="guide-link"
+              href="https://www.capcut.com/help/export-videos-in-capcut"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Guia oficial de CapCut
+              <ExternalLink size={13} />
+            </a>
+          </div>
+        </section>
+
         <section className="workspace" aria-live="polite">
           <div className="result-area">
             {loading && !result ? (
@@ -139,7 +181,7 @@ export default function App(): React.JSX.Element {
               <StatePanel
                 icon={<FileVideo2 size={30} />}
                 title="Todavia no aparece ningun MP4"
-                description="Genera o previsualiza el efecto en CapCut y despues busca de nuevo."
+                description="No hay archivos internos detectables todavia. Consulta la guia para obtener el archivo final desde CapCut."
                 action={
                   <button className="button button-secondary" onClick={() => void scan()}>
                     <RefreshCw size={16} />
@@ -201,6 +243,26 @@ export default function App(): React.JSX.Element {
         </div>
       )}
     </div>
+  )
+}
+
+function GuideStep({
+  number,
+  title,
+  children
+}: {
+  number: string
+  title: string
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <li>
+      <span className="guide-step-number">{number}</span>
+      <p>
+        <strong>{title}</strong>
+        {children}
+      </p>
+    </li>
   )
 }
 

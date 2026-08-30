@@ -50,3 +50,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-29.
 - Decision: desde 0.1.2 generar todos los frames ICO con alfa explicito y esquinas transparentes; el acceso directo toma su icono del portable versionado y solicita a Windows refrescar la cache visual.
 - Motivo: evitar esquinas blancas y la reutilizacion del icono turquesa anterior en Explorer.
+
+## D-008 - Guia de exportacion dentro de la UI
+
+- Estado: vigente.
+- Fecha: 2026-08-29.
+- Decision: desde 0.2.0 mostrar una guia breve basada en la ayuda oficial de CapCut para revisar, exportar como MP4/H.264 y abrir la carpeta final. Si hay recursos Pro, indicar alternativas gratuitas o licencia activa; no documentar el procedimiento de cache usado para evitar restricciones.
+- Motivo: resolver el olvido operativo del usuario sin convertir el inspector en una guia de evasion de licencia.

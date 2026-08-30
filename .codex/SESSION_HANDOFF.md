@@ -6,7 +6,7 @@ Entregar una aplicacion Windows independiente y de solo lectura para detectar el
 
 ## Tarea actual
 
-No hay una implementacion activa. Clip Cache Inspector 0.1.2 quedo completado y validado con esquinas transparentes y cache visual renovada.
+No hay una implementacion activa. Clip Cache Inspector 0.2.0 quedo completado y validado con una guia visible de exportacion legitima.
 
 ## Estado actual
 
@@ -16,15 +16,16 @@ No hay una implementacion activa. Clip Cache Inspector 0.1.2 quedo completado y 
 - Remoto privado: `https://github.com/ldebortoli/capcut-mp4-inspector.git`, rama `main`.
 - La interfaz, el fondo de arranque y el icono usan carbon calido, cobre apagado y crema; una prueba estatica impide reintroducir el turquesa anterior.
 - Los seis frames ICO tienen alfa cero en sus cuatro esquinas; el acceso usa como fuente el portable versionado y solicita a Windows refrescar su cache de iconos.
-- Validacion: quality completo, audit de runtime con 0 vulnerabilidades, 16/16 pruebas y cobertura 100% en todas las metricas medidas.
-- E2E Electron paso en desarrollo y contra `release/win-unpacked`; captura revisada en `.codex/qa-main.png`.
-- Portable: `release/Clip-Cache-Inspector-0.1.2-x64.exe`, 91.139.300 bytes, SHA-256 `D93BBAC49CE8E64D5E5E11F893BF52833B77FD4F1CE5E8414AE38255E9767777`.
-- Acceso real: `%USERPROFILE%\Documents\Codex\CODEX APPS\Clip Cache Inspector.lnk`; target e icono apuntan al portable 0.1.2, el icono resuelto por Windows fue extraido y revisado, y la ventana cerro con 0 procesos residuales.
+- La UI muestra cuatro pasos de exportacion MP4/H.264, apertura de la carpeta final, aviso sobre recursos Pro y enlace a la ayuda oficial; la franja adapta cuatro, dos o una columna segun el ancho.
+- Validacion: quality completo, audit de runtime con 0 vulnerabilidades, 17/17 pruebas y cobertura 100% en todas las metricas medidas.
+- E2E Electron paso en desarrollo y contra `release/win-unpacked`; capturas amplia y compacta revisadas en `.codex/qa-main.png` y `.codex/qa-compact.png`, sin desborde horizontal.
+- Portable: `release/Clip-Cache-Inspector-0.2.0-x64.exe`, 91.139.546 bytes, SHA-256 `D72BFA4A0CAD881A4D6A193B864E495AFFAC749B2FC5DD27EB0CF0D2CEE752A3`.
+- Acceso real: `%USERPROFILE%\Documents\Codex\CODEX APPS\Clip Cache Inspector.lnk`; target e icono apuntan al portable 0.2.0, la ventana expuso icono nativo y cerro con 0 procesos residuales.
 - GitHub Secret Scanning/Push Protection no se pudo habilitar: API HTTP 422 `Secret scanning is not available for this repository`; `npm run scan:secrets` funciona como control local.
 
 ## Proximos pasos
 
-1. Mantener 0.1.2 sin cambios hasta una proxima modificacion ejecutable; entonces incrementar SemVer.
+1. Mantener 0.2.0 sin cambios hasta una proxima modificacion ejecutable; entonces incrementar SemVer.
 2. Si CapCut cambia rutas internas, actualizar las definiciones centralizadas y sus pruebas.
 3. No reintentar Secret Protection mientras GitHub conserve el bloqueo por repositorio/plan.
 

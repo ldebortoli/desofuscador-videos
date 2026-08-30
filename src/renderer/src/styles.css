@@ -359,6 +359,89 @@ main {
   background: #171310;
   border-left: 1px solid var(--line-soft);
 }
+.export-guide {
+  max-width: 1400px;
+  padding: 17px 19px;
+  margin: 0 auto 20px;
+  background: #171310;
+  border: 1px solid var(--line-soft);
+  border-radius: 11px;
+}
+.guide-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0;
+  margin: 15px 0 13px;
+  list-style: none;
+}
+.guide-list li {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  gap: 9px;
+  align-items: flex-start;
+  padding-right: 12px;
+}
+.guide-list li + li {
+  padding-left: 12px;
+  border-left: 1px solid var(--line-soft);
+}
+.guide-step-number {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  color: #1b110d;
+  background: var(--accent);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 900;
+}
+.guide-list p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+.guide-list strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text);
+  font-size: 10px;
+}
+.guide-license-note {
+  min-width: 0;
+  color: #d7bd94;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.guide-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line-soft);
+}
+.guide-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.guide-link:hover {
+  text-decoration: underline;
+}
+.guide-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
 .aside-heading {
   display: flex;
   align-items: center;
@@ -511,6 +594,13 @@ footer {
 }
 
 @media (max-width: 980px) {
+  .guide-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .guide-list li:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
   .workspace {
     grid-template-columns: 1fr;
   }
@@ -542,6 +632,18 @@ footer {
     padding: 21px 18px 32px;
   }
   .hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .guide-list {
+    grid-template-columns: 1fr;
+  }
+  .guide-list li,
+  .guide-list li + li {
+    padding: 0;
+    border-left: 0;
+  }
+  .guide-footer {
     align-items: flex-start;
     flex-direction: column;
   }

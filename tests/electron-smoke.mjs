@@ -16,6 +16,7 @@ const filePath = join(
   'efecto-control-e2e.mp4'
 )
 const screenshotPath = join(projectRoot, '.codex', 'qa-main.png')
+const compactScreenshotPath = join(projectRoot, '.codex', 'qa-compact.png')
 const executablePath = process.env.CCI_E2E_EXECUTABLE
   ? resolve(process.env.CCI_E2E_EXECUTABLE)
   : join(projectRoot, 'node_modules', 'electron', 'dist', 'electron.exe')
@@ -40,6 +41,11 @@ try {
   const page = await app.firstWindow()
   await page.waitForLoadState('domcontentloaded')
   await page.getByRole('heading', { name: 'Encuentra el MP4 que genero CapCut' }).waitFor({ timeout: 15_000 })
+  await page.getByRole('heading', { name: 'Guia rapida de exportacion' }).waitFor()
+  const officialGuide = await page.getByRole('link', { name: 'Guia oficial de CapCut' }).getAttribute('href')
+  if (officialGuide !== 'https://www.capcut.com/help/export-videos-in-capcut') {
+    throw new Error('La guia no conserva el enlace oficial esperado')
+  }
   if (!(await page.evaluate(() => Boolean(window.inspector?.scan))))
     throw new Error('El preload aislado no expuso la API')
   await app.evaluate(({ shell }) => {
@@ -50,6 +56,13 @@ try {
   })
 
   await page.getByTestId('detected-file-name').filter({ hasText: 'efecto-control-e2e.mp4' }).waitFor()
+  await page.screenshot({ path: screenshotPath, fullPage: true })
+  await page.setViewportSize({ width: 840, height: 620 })
+  const horizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+  )
+  if (horizontalOverflow) throw new Error('La guia produce desborde horizontal en ancho compacto')
+  await page.screenshot({ path: compactScreenshotPath, fullPage: true })
   await page.getByRole('button', { name: 'Abrir carpeta' }).click()
   await page.getByText('Carpeta abierta y archivo seleccionado').waitFor()
   const revealedPaths = await app.evaluate(({ shell }) => shell.__clipCacheRevealedPaths)
@@ -58,7 +71,6 @@ try {
   await page.getByRole('button', { name: 'Copiar ruta' }).click()
   const copied = await app.evaluate(({ clipboard }) => clipboard.readText())
   if (copied !== filePath) throw new Error('No se copio la ruta exacta')
-  await page.screenshot({ path: screenshotPath, fullPage: true })
 
   await rm(filePath)
   await page.getByRole('button', { name: 'Buscar de nuevo' }).click()

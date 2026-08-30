@@ -8,6 +8,7 @@ No hay tareas en curso.
 
 # DONE
 
+- [2026-08-29] Agregar en 0.2.0 una guia breve y responsive dentro de la UI para revisar, exportar MP4/H.264 y abrir la carpeta final desde CapCut, con limite explicito sobre recursos Pro.
 - [2026-08-29] Corregir en 0.1.2 la transparencia de los seis frames ICO, usar el portable versionado como fuente del acceso y refrescar la cache visual de Windows.
 - [2026-08-29] Recolorear Clip Cache Inspector 0.1.1 con una identidad calida propia, prueba antirregresion cromatica, icono/portable/acceso directo actualizados y validacion Windows completa.
 - [2026-08-29] Entregar Clip Cache Inspector 0.1.0 como aplicacion Windows independiente: deteccion/revelado seguros, UI responsive, 13/13 pruebas con cobertura 100%, smoke en desarrollo y paquete, portable x64, icono/AUMID/acceso Codex Apps propios, documentacion y repositorio privado.

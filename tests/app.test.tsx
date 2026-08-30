@@ -37,6 +37,20 @@ beforeEach(() => {
 })
 
 describe('interfaz principal', () => {
+  test('incluye una guia breve de exportacion legitima', async () => {
+    render(<App />)
+    await screen.findByTestId('detected-file-name')
+
+    expect(screen.getByRole('heading', { name: 'Guia rapida de exportacion' })).toBeInTheDocument()
+    expect(screen.getByText('Revisa el proyecto')).toBeInTheDocument()
+    expect(screen.getByText('Configura el MP4')).toBeInTheDocument()
+    expect(screen.getByText(/reemplazalos por alternativas gratuitas o usa una licencia activa/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Guia oficial de CapCut' })).toHaveAttribute(
+      'href',
+      'https://www.capcut.com/help/export-videos-in-capcut'
+    )
+  })
+
   test('muestra el nombre y metadata del archivo detectado', async () => {
     render(<App />)
 

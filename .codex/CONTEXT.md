@@ -23,7 +23,7 @@ Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno
 ## Ejecucion y tests
 
 - `npm run quality`: lint, formato, tipos, version gate y escaneo local de secretos.
-- `npm run test:coverage`: 16/16 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
+- `npm run test:coverage`: 17/17 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
 - `npm run test:e2e`: Electron real con deteccion, revelado, portapapeles, vacio y captura.
 - `npm run package`: portable Windows x64.
 - `npm run install:shortcut`: instala/verifica `Clip Cache Inspector.lnk` en Codex Apps.
@@ -38,5 +38,6 @@ Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno
 - Apps Dashboard no admite este proyecto: su registro exige layouts moviles Expo o Android nativo bajo `apps/mobile`.
 - Desde 0.1.1 la identidad visual usa carbon calido, cobre apagado y crema, sin el turquesa de la entrega inicial.
 - Desde 0.1.2 los seis frames ICO garantizan esquinas con alfa cero y el acceso directo obtiene el icono del portable versionado para evitar cache visual obsoleta.
-- El portable 0.1.2 vive en `release/Clip-Cache-Inspector-0.1.2-x64.exe`; la carpeta `release/` no se versiona.
+- Desde 0.2.0 la UI incluye una guia responsive de exportacion MP4 legitima basada en la ayuda oficial de CapCut; no documenta procedimientos de evasion Pro.
+- El portable 0.2.0 vive en `release/Clip-Cache-Inspector-0.2.0-x64.exe`; la carpeta `release/` no se versiona.
 - Si el proyecto tiene una UI para controlar un bot, servidor o proceso en segundo plano, cerrar esa UI debe detener el proceso administrado cuando sea tecnicamente posible.
