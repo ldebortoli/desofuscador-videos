@@ -1,6 +1,6 @@
 {
   "name": "clip-cache-inspector",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Aplicacion Windows de solo lectura para localizar MP4 internos de CapCut",
   "main": "./out/main/index.js",
   "author": "Lucas De Bortoli",
@@ -9,6 +9,7 @@
   "type": "module",
   "scripts": {
     "postinstall": "node node_modules/electron/install.js",
+    "build:icon": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Icon.ps1",
     "dev": "electron-vite dev",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",

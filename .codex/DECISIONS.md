@@ -43,3 +43,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-29.
 - Decision: desde 0.1.1 usar carbon calido, cobre apagado y crema en la interfaz, el arranque y el icono de Windows; eliminar el turquesa anterior.
 - Motivo: diferenciar Clip Cache Inspector del lenguaje visual de Apps Dashboard sin alterar su estructura ni su comportamiento.
+
+## D-007 - Alfa del icono y cache de Windows
+
+- Estado: vigente.
+- Fecha: 2026-08-29.
+- Decision: desde 0.1.2 generar todos los frames ICO con alfa explicito y esquinas transparentes; el acceso directo toma su icono del portable versionado y solicita a Windows refrescar la cache visual.
+- Motivo: evitar esquinas blancas y la reutilizacion del icono turquesa anterior en Explorer.
