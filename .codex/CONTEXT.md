@@ -6,7 +6,7 @@ Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno
 
 ## Estado detectado
 
-- Ruta: `C:\Users\calei\Documents\CapCut MP4 Inspector`
+- Ruta: `%USERPROFILE%\Documents\CapCut MP4 Inspector`
 - Stack: Electron 43, React 19, TypeScript 5.9, electron-vite 5, Vitest y Playwright.
 - Git: repositorio independiente en rama `main`.
 - Remoto origin: `https://github.com/ldebortoli/capcut-mp4-inspector.git` (privado).
@@ -23,7 +23,7 @@ Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno
 ## Ejecucion y tests
 
 - `npm run quality`: lint, formato, tipos, version gate y escaneo local de secretos.
-- `npm run test:coverage`: 13/13 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
+- `npm run test:coverage`: 14/14 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
 - `npm run test:e2e`: Electron real con deteccion, revelado, portapapeles, vacio y captura.
 - `npm run package`: portable Windows x64.
 - `npm run install:shortcut`: instala/verifica `Clip Cache Inspector.lnk` en Codex Apps.
@@ -36,5 +36,6 @@ Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno
 - Codigo e identificadores tecnicos en ingles; interfaz y documentacion operativa en espanol.
 - Version canonica SemVer en `package.json`; todo cambio ejecutable debe incrementarla.
 - Apps Dashboard no admite este proyecto: su registro exige layouts moviles Expo o Android nativo bajo `apps/mobile`.
-- El portable 0.1.0 vive en `release/Clip-Cache-Inspector-0.1.0-x64.exe`; la carpeta `release/` no se versiona.
+- Desde 0.1.1 la identidad visual usa carbon calido, cobre apagado y crema, sin el turquesa de la entrega inicial.
+- El portable 0.1.1 vive en `release/Clip-Cache-Inspector-0.1.1-x64.exe`; la carpeta `release/` no se versiona.
 - Si el proyecto tiene una UI para controlar un bot, servidor o proceso en segundo plano, cerrar esa UI debe detener el proceso administrado cuando sea tecnicamente posible.

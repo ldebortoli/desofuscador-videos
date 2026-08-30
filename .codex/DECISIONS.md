@@ -36,3 +36,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-29.
 - Decision: comenzar en 0.1.0 con SemVer canonico en `package.json`, crear icono/AppUserModelID/acceso `Codex Apps` propios y no registrar el proyecto en Apps Dashboard mientras este solo admita proyectos moviles.
 - Motivo: identidad Windows consistente y separacion real sin ampliar otro producto fuera de alcance.
+
+## D-006 - Identidad cromatica calida
+
+- Estado: vigente.
+- Fecha: 2026-08-29.
+- Decision: desde 0.1.1 usar carbon calido, cobre apagado y crema en la interfaz, el arranque y el icono de Windows; eliminar el turquesa anterior.
+- Motivo: diferenciar Clip Cache Inspector del lenguaje visual de Apps Dashboard sin alterar su estructura ni su comportamiento.

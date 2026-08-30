@@ -24,7 +24,7 @@ function createWindow(): void {
     center: true,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: '#0d1115',
+    backgroundColor: '#120f0e',
     title: 'Clip Cache Inspector',
     icon: iconPath(),
     webPreferences: {
