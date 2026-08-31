@@ -4,7 +4,7 @@ No hay tareas pendientes.
 
 # IN PROGRESS
 
-No hay tareas en curso.
+- [P1] Corregir el CI publico que falla porque el checkout Windows usa CRLF y Prettier exige LF; normalizar finales de linea, validar en un checkout representativo, publicar y esperar el nuevo run hasta confirmar resultado.
 
 # DONE
 

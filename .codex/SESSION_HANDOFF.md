@@ -6,7 +6,7 @@ Entregar una aplicacion Windows independiente para detectar el MP4 interno mas r
 
 ## Tarea actual
 
-No hay implementacion activa. Desofuscador Videos 0.6.0 quedo completado, empaquetado, instalado y sincronizado en `main`.
+Se esta corrigiendo el run `33401317136`: no fallo por cuota ni timeout, sino porque el checkout Windows con CRLF hizo que `prettier --check` marcara 42 archivos. Se agrego normalizacion Git a LF; falta validar un checkout con `core.autocrlf=true`, publicar y esperar el run de reemplazo.
 
 ## Estado actual
 

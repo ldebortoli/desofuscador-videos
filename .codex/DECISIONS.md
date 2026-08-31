@@ -92,3 +92,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-31.
 - Decision: desde 0.6.0 llamar al producto, carpeta local, ventana y acceso `Desofuscador Videos`; usar `desofuscador-videos` como nombre de paquete y repositorio. Mantener `Abrir`, `Ruta`, `Abrir salida`, `Desofuscar` y `Limpiar carpeta` en una sola fila. Elegir la salida mediante dialogo nativo, aceptar solo una ruta absoluta y persistirla en los datos locales de la app; el valor inicial sigue siendo `%USERPROFILE%\Videos\Cortos`. Publicar el repositorio con Secret Scanning y Push Protection habilitados, calidad/cobertura en push y PR, y E2E/empaquetado solo por ejecucion manual.
 - Motivo: simplificar la barra de acciones, permitir que cada usuario organice sus videos sin exponer entrada de rutas arbitrarias y entregar el proyecto bajo el nombre y visibilidad solicitados con controles proporcionales a un repositorio publico.
+
+## D-014 - Finales de linea deterministas para CI Windows
+
+- Estado: vigente.
+- Fecha: 2026-08-31.
+- Decision: versionar `.gitattributes` con `* text=auto eol=lf` y marcar ICO como binario. Mantener Prettier con su salida LF canonica en lugar de relajar `endOfLine` a `auto`.
+- Motivo: el primer run publico convirtio el checkout a CRLF y Prettier marco 42 archivos aunque el mismo commit pasaba localmente; normalizar desde Git hace reproducible el control sin ocultar diferencias reales de formato.

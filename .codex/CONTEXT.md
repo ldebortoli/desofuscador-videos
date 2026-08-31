@@ -47,4 +47,5 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 - Desde 0.6.0, el producto se llama `Desofuscador Videos`; las cinco acciones ocupan una sola fila y la carpeta de salida puede elegirse con un dialogo nativo. La preferencia se guarda localmente y conserva `%USERPROFILE%\Videos\Cortos` como valor inicial.
 - El portable 0.6.0 vive en `release/Desofuscador-Videos-0.6.0-x64.exe`; la carpeta `release/` no se versiona.
 - GitHub ejecuta calidad y cobertura en push/PR. E2E y empaquetado quedan en un workflow manual para proteger cuota.
+- `.gitattributes` fija LF en archivos de texto para que Prettier reciba el mismo contenido en checkouts Windows y locales.
 - Si el proyecto tiene una UI para controlar un bot, servidor o proceso en segundo plano, cerrar esa UI debe detener el proceso administrado cuando sea tecnicamente posible.
