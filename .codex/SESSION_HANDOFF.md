@@ -6,7 +6,7 @@ Entregar una aplicacion Windows independiente para detectar el MP4 interno mas r
 
 ## Tarea actual
 
-Se esta corrigiendo el run `33401317136`: no fallo por cuota ni timeout, sino porque el checkout Windows con CRLF hizo que `prettier --check` marcara 42 archivos. Se agrego normalizacion Git a LF; falta validar un checkout con `core.autocrlf=true`, publicar y esperar el run de reemplazo.
+No hay implementacion activa. El run fallido `33401317136` no fue cuota ni timeout: el checkout Windows con CRLF hizo que Prettier marcara 42 archivos. `.gitattributes` fijo LF, el checkout representativo local paso y el run de reemplazo `33404655940` termino completo en verde. Las acciones oficiales quedaron actualizadas a v7 para eliminar la advertencia del runtime Node.js antiguo.
 
 ## Estado actual
 

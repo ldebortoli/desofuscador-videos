@@ -4,10 +4,11 @@ No hay tareas pendientes.
 
 # IN PROGRESS
 
-- [P1] Corregir el CI publico que falla porque el checkout Windows usa CRLF y Prettier exige LF; normalizar finales de linea, validar en un checkout representativo, publicar y esperar el nuevo run hasta confirmar resultado.
+No hay tareas en curso.
 
 # DONE
 
+- [2026-08-31] Corregir el CI publico: normalizar archivos de texto a LF con `.gitattributes`, reproducir un checkout Windows con `core.autocrlf=true` y confirmar el run `33404655940` completo en verde. Actualizar ademas las acciones oficiales a v7 para retirar la advertencia del runtime Node.js obsoleto.
 - [2026-08-31] Entregar Desofuscador Videos 0.6.0: identidad y raiz local renombradas, cinco acciones en una fila, salida configurable/persistente con valor inicial `%USERPROFILE%\Videos\Cortos`, portable/acceso verificados y repositorio publico `desofuscador-videos` con CI, Secret Scanning y Push Protection.
 - [2026-08-31] Resolver el bloqueo anterior de Secret Scanning/Push Protection al convertir el repositorio en publico; ambas protecciones quedaron habilitadas y verificadas por API.
 - [2026-08-31] Entregar Clip Cache Inspector 0.5.0 con salida fija en `%USERPROFILE%\Videos\Cortos`, nombre de archivo opcional validado, sufijo anticolision y boton para abrir esa carpeta.
