@@ -18,7 +18,7 @@ $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $artifact
 $shortcut.WorkingDirectory = Split-Path -Parent $artifact
 $shortcut.IconLocation = "$artifact,0"
-$shortcut.Description = 'Localiza el MP4 interno mas reciente de CapCut'
+$shortcut.Description = 'Localiza, analiza y recupera MP4 internos de CapCut'
 $shortcut.WindowStyle = 1
 $shortcut.Save()
 

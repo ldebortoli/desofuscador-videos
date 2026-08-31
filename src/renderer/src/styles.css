@@ -191,6 +191,11 @@ main {
   background: transparent;
   border-color: var(--line);
 }
+.button-danger {
+  color: #e5aaa5;
+  background: rgba(207, 116, 109, 0.08);
+  border-color: rgba(207, 116, 109, 0.32);
+}
 .workspace {
   max-width: 1400px;
   min-height: 510px;
@@ -428,8 +433,12 @@ main {
 }
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 9px;
   margin-top: 19px;
+}
+.actions .button-danger {
+  margin-left: auto;
 }
 .state-panel {
   width: min(500px, 100%);
@@ -774,6 +783,9 @@ footer {
   .metadata > div + div {
     border-top: 1px solid var(--line-soft);
     border-left: 0;
+  }
+  .actions .button-danger {
+    margin-left: 0;
   }
   .technical-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

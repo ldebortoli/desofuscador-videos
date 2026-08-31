@@ -1,7 +1,7 @@
 {
   "name": "clip-cache-inspector",
-  "version": "0.3.1",
-  "description": "Aplicacion Windows de solo lectura para localizar MP4 internos de CapCut",
+  "version": "0.4.0",
+  "description": "Aplicacion Windows para localizar, analizar y recuperar MP4 internos de CapCut",
   "main": "./out/main/index.js",
   "author": "Lucas De Bortoli",
   "license": "UNLICENSED",
@@ -63,6 +63,12 @@
     "asar": true,
     "asarUnpack": [
       "node_modules/@ffprobe-installer/win32-x64/ffprobe.exe"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/Desofuscar-Video.ps1",
+        "to": "tools/Desofuscar-Video.ps1"
+      }
     ],
     "directories": {
       "output": "release"

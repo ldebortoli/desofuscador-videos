@@ -12,6 +12,8 @@ import {
   RefreshCw,
   ScanSearch,
   ShieldCheck,
+  Sparkles,
+  Trash2,
   X
 } from 'lucide-react'
 import type { MediaAnalysis, Mp4FileInfo, ScanResult } from '../../shared/types'
@@ -27,6 +29,8 @@ export default function App(): React.JSX.Element {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [opening, setOpening] = useState(false)
+  const [deobfuscating, setDeobfuscating] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
   const mounted = useRef(true)
 
@@ -81,6 +85,43 @@ export default function App(): React.JSX.Element {
     }
   }
 
+  const deobfuscate = async (file: Mp4FileInfo): Promise<void> => {
+    setDeobfuscating(true)
+    try {
+      const action = await window.inspector.deobfuscate(file.filePath)
+      setToast(
+        action.status === 'completed'
+          ? { tone: 'success', text: 'Video desofuscado y seleccionado en Explorer' }
+          : { tone: 'success', text: 'Desofuscacion cancelada; no se hicieron cambios' }
+      )
+    } catch (reason) {
+      setToast({ tone: 'error', text: reason instanceof Error ? reason.message : 'No se pudo desofuscar el video' })
+    } finally {
+      setDeobfuscating(false)
+    }
+  }
+
+  const emptyFolder = async (file: Mp4FileInfo): Promise<void> => {
+    setDeleting(true)
+    try {
+      const action = await window.inspector.emptyFolder(file.filePath)
+      if (action.status === 'completed') {
+        setToast({
+          tone: 'success',
+          text: `${action.removedCount ?? 0} elementos enviados a la Papelera`
+        })
+        await scan()
+      } else {
+        setToast({ tone: 'success', text: 'Eliminacion cancelada; no se movio ningun archivo' })
+      }
+    } catch (reason) {
+      setToast({ tone: 'error', text: reason instanceof Error ? reason.message : 'No se pudo vaciar la carpeta' })
+      await scan()
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const file = result?.file ?? null
 
   return (
@@ -97,7 +138,7 @@ export default function App(): React.JSX.Element {
         </div>
         <div className="header-status">
           <ShieldCheck size={15} />
-          <span>Solo lectura</span>
+          <span>Acciones controladas</span>
         </div>
       </header>
 
@@ -107,10 +148,14 @@ export default function App(): React.JSX.Element {
             <span className="eyebrow">INSPECTOR LOCAL PARA WINDOWS</span>
             <h1>Encuentra el MP4 que genero CapCut</h1>
             <p>
-              Detecta el archivo interno mas reciente, muestra su nombre y abre exactamente la carpeta que lo contiene.
+              Detecta el archivo interno mas reciente, analiza su contenido y permite recuperar una copia reproducible.
             </p>
           </div>
-          <button className="button button-secondary" disabled={loading} onClick={() => void scan()}>
+          <button
+            className="button button-secondary"
+            disabled={loading || deobfuscating || deleting}
+            onClick={() => void scan()}
+          >
             <RefreshCw className={loading ? 'spinning' : ''} size={17} />
             {loading ? 'Buscando...' : 'Buscar de nuevo'}
           </button>
@@ -177,7 +222,16 @@ export default function App(): React.JSX.Element {
                 }
               />
             ) : file ? (
-              <FileResult file={file} opening={opening} onReveal={reveal} onCopy={copyPath} />
+              <FileResult
+                file={file}
+                opening={opening}
+                deobfuscating={deobfuscating}
+                deleting={deleting}
+                onReveal={reveal}
+                onCopy={copyPath}
+                onDeobfuscate={deobfuscate}
+                onEmptyFolder={emptyFolder}
+              />
             ) : (
               <StatePanel
                 icon={<FileVideo2 size={30} />}
@@ -204,7 +258,7 @@ export default function App(): React.JSX.Element {
               </div>
             </div>
             <p>
-              Se ignoran los videos auxiliares <code>*.alpha.mp4</code>. Ningun proyecto se modifica.
+              Se ignoran los videos auxiliares <code>*.alpha.mp4</code>. Las acciones se limitan al archivo detectado.
             </p>
             <div className="location-list">
               {(result?.locations ?? []).map((location) => (
@@ -224,7 +278,10 @@ export default function App(): React.JSX.Element {
             </div>
             <div className="scope-note">
               <CircleAlert size={16} />
-              <p>Esta aplicacion no exporta videos, no ejecuta CapCut y no cambia funciones de licencia.</p>
+              <p>
+                Desofuscar guarda una copia donde elijas. Eliminar todo pide confirmacion y usa la Papelera; no cambia
+                funciones de licencia.
+              </p>
             </div>
           </aside>
         </section>
@@ -270,14 +327,23 @@ function GuideStep({
 function FileResult({
   file,
   opening,
+  deobfuscating,
+  deleting,
   onReveal,
-  onCopy
+  onCopy,
+  onDeobfuscate,
+  onEmptyFolder
 }: {
   file: Mp4FileInfo
   opening: boolean
+  deobfuscating: boolean
+  deleting: boolean
   onReveal: (file: Mp4FileInfo) => Promise<void>
   onCopy: (file: Mp4FileInfo) => Promise<void>
+  onDeobfuscate: (file: Mp4FileInfo) => Promise<void>
+  onEmptyFolder: (file: Mp4FileInfo) => Promise<void>
 }): React.JSX.Element {
+  const busy = opening || deobfuscating || deleting
   return (
     <article className="file-card">
       <div className="file-heading">
@@ -311,13 +377,21 @@ function FileResult({
         <code title={file.filePath}>{file.filePath}</code>
       </div>
       <div className="actions">
-        <button className="button button-primary" disabled={opening} onClick={() => void onReveal(file)}>
+        <button className="button button-primary" disabled={busy} onClick={() => void onReveal(file)}>
           <FolderOpen size={18} />
           {opening ? 'Abriendo...' : 'Abrir carpeta'}
         </button>
-        <button className="button button-ghost" onClick={() => void onCopy(file)}>
+        <button className="button button-ghost" disabled={busy} onClick={() => void onCopy(file)}>
           <Copy size={17} />
           Copiar ruta
+        </button>
+        <button className="button button-secondary" disabled={busy} onClick={() => void onDeobfuscate(file)}>
+          {deobfuscating ? <RefreshCw className="spinning" size={17} /> : <Sparkles size={17} />}
+          {deobfuscating ? 'Desofuscando...' : 'Desofuscar'}
+        </button>
+        <button className="button button-danger" disabled={busy} onClick={() => void onEmptyFolder(file)}>
+          <Trash2 size={17} />
+          {deleting ? 'Eliminando...' : 'Eliminar todo'}
         </button>
       </div>
     </article>

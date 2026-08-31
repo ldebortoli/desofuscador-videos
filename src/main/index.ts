@@ -36,9 +36,10 @@ function createWindow(): void {
     }
   })
 
-  registerIpc()
+  const unregisterIpc = registerIpc(mainWindow)
   mainWindow.once('ready-to-show', () => mainWindow?.show())
   mainWindow.on('closed', () => {
+    unregisterIpc()
     mainWindow = null
     app.quit()
   })

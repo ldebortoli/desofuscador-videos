@@ -2,7 +2,7 @@
 
 ## Descripcion general
 
-Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno mas reciente generado por CapCut, mostrar su nombre y metadata tecnica, copiar su ruta y abrir la carpeta exacta que lo contiene. No pertenece a Lic Dengue HQ ni automatiza exportaciones o funciones de pago.
+Aplicacion Windows independiente para localizar el MP4 interno mas reciente generado por CapCut, mostrar su metadata tecnica, recuperar una copia reproducible de recursos BDVE compatibles y vaciar de forma recuperable el contenido de su carpeta. No pertenece a Lic Dengue HQ ni cambia funciones de licencia.
 
 ## Estado detectado
 
@@ -23,8 +23,8 @@ Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno
 ## Ejecucion y tests
 
 - `npm run quality`: lint, formato, tipos, version gate y escaneo local de secretos.
-- `npm run test:coverage`: 29/29 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
-- `npm run test:e2e`: Electron real con deteccion, revelado, portapapeles, vacio y captura.
+- `npm run test:coverage`: 41/41 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
+- `npm run test:e2e`: Electron real con deteccion, revelado, portapapeles, cancelacion segura de las acciones, vacio y capturas.
 - `npm run package`: portable Windows x64.
 - `npm run install:shortcut`: instala/verifica `Clip Cache Inspector.lnk` en Codex Apps.
 
@@ -40,6 +40,7 @@ Aplicacion Windows independiente y de solo lectura para localizar el MP4 interno
 - Desde 0.1.2 los seis frames ICO garantizan esquinas con alfa cero y el acceso directo obtiene el icono del portable versionado para evitar cache visual obsoleta.
 - Desde 0.2.0 la UI incluye una guia responsive de exportacion MP4 legitima basada en la ayuda oficial de CapCut; no documenta procedimientos de evasion Pro.
 - Desde 0.3.0 se incluye ffprobe Windows x64 para mostrar codec, perfil, resolucion, FPS, duracion, bitrate, pixel, contenedor y audio; caches sin `moov` se marcan como incompletos.
-- Desde 0.3.1, si ffprobe no puede abrir un recurso, se consulta el JSON local `Cache/importcache3/mediainfo/<hash>.json`; `isCryptorFile` se muestra como `Interno CapCut` sin descifrar ni modificar el archivo.
-- El portable 0.3.1 vive en `release/Clip-Cache-Inspector-0.3.1-x64.exe`; la carpeta `release/` no se versiona.
+- Desde 0.3.1, si ffprobe no puede abrir un recurso, se consulta el JSON local `Cache/importcache3/mediainfo/<hash>.json`; `isCryptorFile` se muestra como `Interno CapCut`.
+- Desde 0.4.0, `Desofuscar` usa el detector BDVE versionado y el ffprobe incluido, conserva el original y valida completamente la salida elegida. `Eliminar todo` muestra ruta/cantidad, requiere confirmacion, envia cada hijo a la Papelera y conserva la carpeta contenedora.
+- El portable 0.4.0 vive en `release/Clip-Cache-Inspector-0.4.0-x64.exe`; la carpeta `release/` no se versiona.
 - Si el proyecto tiene una UI para controlar un bot, servidor o proceso en segundo plano, cerrar esa UI debe detener el proceso administrado cuando sea tecnicamente posible.

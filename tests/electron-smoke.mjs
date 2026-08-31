@@ -1,5 +1,5 @@
 import { dirname, join, resolve } from 'node:path'
-import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { _electron as electron } from 'playwright-core'
 
@@ -17,6 +17,7 @@ const filePath = join(
 )
 const screenshotPath = join(projectRoot, '.codex', 'qa-main.png')
 const compactScreenshotPath = join(projectRoot, '.codex', 'qa-compact.png')
+const actionsScreenshotPath = join(projectRoot, '.codex', 'qa-actions.png')
 const executablePath = process.env.CCI_E2E_EXECUTABLE
   ? resolve(process.env.CCI_E2E_EXECUTABLE)
   : join(projectRoot, 'node_modules', 'electron', 'dist', 'electron.exe')
@@ -46,18 +47,29 @@ try {
   if (officialGuide !== 'https://www.capcut.com/help/export-videos-in-capcut') {
     throw new Error('La guia no conserva el enlace oficial esperado')
   }
-  if (!(await page.evaluate(() => Boolean(window.inspector?.scan))))
+  if (
+    !(await page.evaluate(() =>
+      Boolean(window.inspector?.scan && window.inspector?.deobfuscate && window.inspector?.emptyFolder)
+    ))
+  )
     throw new Error('El preload aislado no expuso la API')
-  await app.evaluate(({ shell }) => {
+  await app.evaluate(({ dialog, shell }) => {
     shell.__clipCacheRevealedPaths = []
+    shell.__clipCacheTrashedPaths = []
     shell.showItemInFolder = (path) => {
       shell.__clipCacheRevealedPaths.push(path)
     }
+    shell.trashItem = async (path) => {
+      shell.__clipCacheTrashedPaths.push(path)
+    }
+    dialog.showSaveDialog = async () => ({ canceled: true })
+    dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false })
   })
 
   await page.getByTestId('detected-file-name').filter({ hasText: 'efecto-control-e2e.mp4' }).waitFor()
   await page.getByTestId('media-analysis-status').filter({ hasText: 'Incompleto' }).waitFor()
   await page.getByText(/estructura MP4 analizable|bloque moov/i).waitFor()
+  await page.locator('.file-card').screenshot({ path: actionsScreenshotPath })
   await page.screenshot({ path: screenshotPath, fullPage: true })
   await page.setViewportSize({ width: 840, height: 620 })
   const horizontalOverflow = await page.evaluate(
@@ -74,6 +86,15 @@ try {
   const copied = await app.evaluate(({ clipboard }) => clipboard.readText())
   if (copied !== filePath) throw new Error('No se copio la ruta exacta')
 
+  await page.getByRole('button', { name: 'Desofuscar' }).click()
+  await page.getByText('Desofuscacion cancelada; no se hicieron cambios').waitFor()
+
+  await page.getByRole('button', { name: 'Eliminar todo' }).click()
+  await page.getByText('Eliminacion cancelada; no se movio ningun archivo').waitFor()
+  await access(filePath)
+  const trashedPaths = await app.evaluate(({ shell }) => shell.__clipCacheTrashedPaths)
+  if (trashedPaths.length !== 0) throw new Error('La cancelacion intento eliminar contenido')
+
   await rm(filePath)
   await page.getByRole('button', { name: 'Buscar de nuevo' }).click()
   await page.getByRole('heading', { name: 'Todavia no aparece ningun MP4' }).waitFor()
@@ -83,7 +104,9 @@ try {
   if (title !== 'Clip Cache Inspector' || !bounds || bounds.width < 840 || bounds.height < 620) {
     throw new Error('La ventana no conservo identidad o dimensiones minimas')
   }
-  console.log(`Electron smoke OK: deteccion, revelado, copia, vacio y screenshot en ${screenshotPath}`)
+  console.log(
+    `Electron smoke OK: deteccion, acciones cancelables, revelado, copia, vacio y screenshot en ${screenshotPath}`
+  )
 } finally {
   await app.close()
   await rm(temporaryDirectory, { recursive: true, force: true })

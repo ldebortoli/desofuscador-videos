@@ -55,8 +55,22 @@ export interface ScanResult {
   locations: SearchLocation[]
 }
 
+export type FileActionStatus = 'completed' | 'cancelled'
+
+export interface DeobfuscationResult {
+  status: FileActionStatus
+  outputPath?: string
+}
+
+export interface FolderCleanupResult {
+  status: FileActionStatus
+  removedCount?: number
+}
+
 export interface InspectorApi {
   scan: () => Promise<ScanResult>
   reveal: (path: string) => Promise<void>
   copyPath: (path: string) => Promise<void>
+  deobfuscate: (path: string) => Promise<DeobfuscationResult>
+  emptyFolder: (path: string) => Promise<FolderCleanupResult>
 }

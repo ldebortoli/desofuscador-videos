@@ -7,6 +7,8 @@ import type { ScanResult } from '../src/shared/types'
 const scan = vi.fn<() => Promise<ScanResult>>()
 const reveal = vi.fn<(path: string) => Promise<void>>()
 const copyPath = vi.fn<(path: string) => Promise<void>>()
+const deobfuscate = vi.fn<(path: string) => Promise<{ status: 'completed' | 'cancelled'; outputPath?: string }>>()
+const emptyFolder = vi.fn<(path: string) => Promise<{ status: 'completed' | 'cancelled'; removedCount?: number }>>()
 
 const populated: ScanResult = {
   file: {
@@ -59,7 +61,12 @@ beforeEach(() => {
   scan.mockReset().mockResolvedValue(populated)
   reveal.mockReset().mockResolvedValue(undefined)
   copyPath.mockReset().mockResolvedValue(undefined)
-  Object.defineProperty(window, 'inspector', { configurable: true, value: { scan, reveal, copyPath } })
+  deobfuscate.mockReset().mockResolvedValue({ status: 'completed', outputPath: 'C:\\Videos\\efecto-limpio.mp4' })
+  emptyFolder.mockReset().mockResolvedValue({ status: 'cancelled' })
+  Object.defineProperty(window, 'inspector', {
+    configurable: true,
+    value: { scan, reveal, copyPath, deobfuscate, emptyFolder }
+  })
 })
 
 describe('interfaz principal', () => {
@@ -107,6 +114,41 @@ describe('interfaz principal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Copiar ruta' }))
     await waitFor(() => expect(copyPath).toHaveBeenCalledWith(populated.file?.filePath))
     expect(screen.getByRole('status')).toHaveTextContent('Ruta copiada')
+  })
+
+  test('desofusca el archivo detectado y bloquea acciones mientras trabaja', async () => {
+    let complete: ((value: { status: 'completed'; outputPath: string }) => void) | undefined
+    deobfuscate.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          complete = resolve
+        })
+    )
+    render(<App />)
+    await screen.findByTestId('detected-file-name')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Desofuscar' }))
+    expect(screen.getByRole('button', { name: 'Desofuscando...' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar todo' })).toBeDisabled()
+    complete?.({ status: 'completed', outputPath: 'C:\\Videos\\efecto-limpio.mp4' })
+
+    await waitFor(() => expect(deobfuscate).toHaveBeenCalledWith(populated.file?.filePath))
+    expect(await screen.findByRole('status')).toHaveTextContent('Video desofuscado')
+  })
+
+  test('cancela o confirma el vaciado sin borrar la carpeta contenedora desde la interfaz', async () => {
+    render(<App />)
+    await screen.findByTestId('detected-file-name')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar todo' }))
+    await waitFor(() => expect(emptyFolder).toHaveBeenCalledWith(populated.file?.filePath))
+    expect(screen.getByRole('status')).toHaveTextContent('Eliminacion cancelada')
+    expect(scan).toHaveBeenCalledTimes(1)
+
+    emptyFolder.mockResolvedValueOnce({ status: 'completed', removedCount: 4 })
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar todo' }))
+    await waitFor(() => expect(scan).toHaveBeenCalledTimes(2))
+    expect(screen.getByRole('status')).toHaveTextContent('4 elementos enviados a la Papelera')
   })
 
   test('presenta estado vacio y actualiza la busqueda', async () => {
@@ -181,6 +223,8 @@ describe('interfaz principal', () => {
   test('informa errores al abrir y copiar', async () => {
     reveal.mockRejectedValue(new Error('El archivo desaparecio'))
     copyPath.mockRejectedValue(new Error('Portapapeles ocupado'))
+    deobfuscate.mockRejectedValue(new Error('No es un archivo BDVE'))
+    emptyFolder.mockRejectedValue(new Error('Archivo en uso'))
     render(<App />)
     await screen.findByTestId('detected-file-name')
 
@@ -188,5 +232,9 @@ describe('interfaz principal', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('El archivo desaparecio')
     fireEvent.click(screen.getByRole('button', { name: 'Copiar ruta' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Portapapeles ocupado')
+    fireEvent.click(screen.getByRole('button', { name: 'Desofuscar' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('No es un archivo BDVE')
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar todo' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Archivo en uso')
   })
 })

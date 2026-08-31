@@ -71,3 +71,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-31.
 - Decision: desde 0.3.1, cuando ffprobe no pueda abrir el recurso elegido, leer en modo solo lectura `Cache/importcache3/mediainfo/<hash>.json`. Si el indice marca `isCryptorFile`, mostrar la metadata normalizada con estado `protected`/`Interno CapCut`; no leer almacenes de claves, descifrar, convertir ni modificar el recurso.
 - Motivo: el archivo real observado conserva un `moov` pero usa la capa interna Cryptor de CapCut; clasificarlo como simplemente incompleto era engañoso, mientras que el indice local ya informa H.264, AAC, dimensiones, FPS y duracion.
+
+## D-011 - Acciones controladas sobre archivos detectados
+
+- Estado: vigente; reemplaza el limite de solo lectura de D-003 y D-004 por pedido explicito del usuario.
+- Fecha: 2026-08-31.
+- Decision: desde 0.4.0 permitir desofuscar un MP4 BDVE validado hacia una ruta elegida y vaciar el contenido de su carpeta. La entrada siempre se revalida contra las tres raices CapCut; la desofuscacion conserva el original y valida la salida completa; el vaciado muestra ruta y cantidad, requiere confirmacion nativa, envia cada hijo a la Papelera y conserva la carpeta contenedora. Las acciones son mutuamente excluyentes y la app detiene el proceso transitorio al cerrar.
+- Motivo: incorporar el flujo BDVE automatico ya probado y la limpieza solicitada sin exponer rutas arbitrarias ni convertir una confirmacion ambigua en borrado permanente.
