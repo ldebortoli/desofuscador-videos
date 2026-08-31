@@ -78,3 +78,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-31.
 - Decision: desde 0.4.0 permitir desofuscar un MP4 BDVE validado hacia una ruta elegida y vaciar el contenido de su carpeta. La entrada siempre se revalida contra las tres raices CapCut; la desofuscacion conserva el original y valida la salida completa; el vaciado muestra ruta y cantidad, requiere confirmacion nativa, envia cada hijo a la Papelera y conserva la carpeta contenedora. Las acciones son mutuamente excluyentes y la app detiene el proceso transitorio al cerrar.
 - Motivo: incorporar el flujo BDVE automatico ya probado y la limpieza solicitada sin exponer rutas arbitrarias ni convertir una confirmacion ambigua en borrado permanente.
+
+## D-012 - Destino fijo y nombre opcional para videos recuperados
+
+- Estado: vigente; reemplaza la seleccion manual de salida definida en D-011.
+- Fecha: 2026-08-31.
+- Decision: desde 0.5.0 guardar las copias desofuscadas en `%USERPROFILE%\Videos\Cortos`, mostrar esa ruta en la tarjeta y ofrecer `Abrir Cortos`. El nombre ingresado es opcional, se limita a un nombre de archivo Windows con extension MP4 y nunca controla una ruta. Si el destino ya existe, elegir automaticamente `(2)`, `(3)`, etc.; no sobrescribirlo.
+- Motivo: reducir pasos y mantener todos los cortos en un destino predecible sin perder salidas anteriores ni permitir traversal desde el renderer.

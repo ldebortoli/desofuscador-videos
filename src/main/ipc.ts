@@ -1,9 +1,15 @@
 import { execFile } from 'node:child_process'
-import { readdir } from 'node:fs/promises'
+import { access, mkdir, readdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { app, type BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
 import { CapCutInspector } from './capcutInspector'
-import { BdveDeobfuscator, suggestedOutputName, type ToolExecutor } from './deobfuscator'
+import {
+  BdveDeobfuscator,
+  nextAvailableOutputPath,
+  normalizeOutputName,
+  resolveOutputFolder,
+  type ToolExecutor
+} from './deobfuscator'
 import { resolveFfprobePath } from './ffprobeRunner'
 import { trashFolderContents } from './folderCleanup'
 
@@ -17,6 +23,8 @@ const channels = [
   'inspector:scan',
   'inspector:reveal',
   'inspector:copy-path',
+  'inspector:get-output-folder',
+  'inspector:open-output-folder',
   'inspector:deobfuscate',
   'inspector:empty-folder'
 ] as const
@@ -47,6 +55,26 @@ function powerShellPath(): string {
   return join(process.env['WINDIR'] ?? 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
 }
 
+function outputFolder(): string {
+  return resolveOutputFolder(app.getPath('home'), process.env['CCI_OUTPUT_DIRECTORY'])
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path)
+    return true
+  } catch (reason) {
+    if (reason && typeof reason === 'object' && 'code' in reason && reason.code === 'ENOENT') return false
+    throw reason
+  }
+}
+
+async function ensureOutputFolder(): Promise<string> {
+  const path = outputFolder()
+  await mkdir(path, { recursive: true })
+  return path
+}
+
 export function registerIpc(parentWindow: BrowserWindow): () => void {
   const inspector = new CapCutInspector(process.env['CCI_LOCAL_APP_DATA'] ?? process.env['LOCALAPPDATA'])
   let fileActionInProgress = false
@@ -64,23 +92,23 @@ export function registerIpc(parentWindow: BrowserWindow): () => void {
   ipcMain.handle('inspector:copy-path', (_event, value: unknown) => {
     clipboard.writeText(safePath(value))
   })
-  ipcMain.handle('inspector:deobfuscate', async (_event, value: unknown) => {
+  ipcMain.handle('inspector:get-output-folder', () => outputFolder())
+  ipcMain.handle('inspector:open-output-folder', async () => {
+    const error = await shell.openPath(await ensureOutputFolder())
+    if (error) throw new Error(error)
+  })
+  ipcMain.handle('inspector:deobfuscate', async (_event, value: unknown, requestedName: unknown) => {
     if (fileActionInProgress) throw new Error('Ya hay una accion de archivo en curso')
     fileActionInProgress = true
     try {
       const inputPath = await inspector.resolveRevealableFile(safePath(value))
-      const selection = await dialog.showSaveDialog(parentWindow, {
-        title: 'Guardar video desofuscado',
-        defaultPath: join(app.getPath('videos'), suggestedOutputName(inputPath)),
-        buttonLabel: 'Desofuscar y guardar',
-        filters: [{ name: 'Video MP4', extensions: ['mp4'] }],
-        properties: ['showOverwriteConfirmation', 'createDirectory']
-      })
-      if (selection.canceled || !selection.filePath) return { status: 'cancelled' as const }
+      const folderPath = await ensureOutputFolder()
+      const fileName = normalizeOutputName(inputPath, requestedName)
+      const outputPath = await nextAvailableOutputPath(folderPath, fileName, pathExists)
 
-      await deobfuscator.run(inputPath, selection.filePath)
-      shell.showItemInFolder(selection.filePath)
-      return { status: 'completed' as const, outputPath: selection.filePath }
+      await deobfuscator.run(inputPath, outputPath)
+      shell.showItemInFolder(outputPath)
+      return { status: 'completed' as const, outputPath }
     } finally {
       fileActionInProgress = false
     }

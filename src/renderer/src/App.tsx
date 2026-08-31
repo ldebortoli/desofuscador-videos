@@ -29,8 +29,11 @@ export default function App(): React.JSX.Element {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [opening, setOpening] = useState(false)
+  const [openingOutputFolder, setOpeningOutputFolder] = useState(false)
   const [deobfuscating, setDeobfuscating] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [outputName, setOutputName] = useState('')
+  const [outputFolder, setOutputFolder] = useState('Videos\\Cortos')
   const [toast, setToast] = useState<ToastState | null>(null)
   const mounted = useRef(true)
 
@@ -57,6 +60,19 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     void scan()
   }, [scan])
+
+  useEffect(() => {
+    void window.inspector
+      .getOutputFolder()
+      .then((path) => {
+        if (mounted.current) setOutputFolder(path)
+      })
+      .catch(() => undefined)
+  }, [])
+
+  useEffect(() => {
+    setOutputName('')
+  }, [result?.file?.filePath])
 
   useEffect(() => {
     if (!toast) return undefined
@@ -88,16 +104,28 @@ export default function App(): React.JSX.Element {
   const deobfuscate = async (file: Mp4FileInfo): Promise<void> => {
     setDeobfuscating(true)
     try {
-      const action = await window.inspector.deobfuscate(file.filePath)
+      const action = await window.inspector.deobfuscate(file.filePath, outputName)
       setToast(
         action.status === 'completed'
-          ? { tone: 'success', text: 'Video desofuscado y seleccionado en Explorer' }
+          ? { tone: 'success', text: 'Video guardado en Cortos y seleccionado en Explorer' }
           : { tone: 'success', text: 'Desofuscacion cancelada; no se hicieron cambios' }
       )
     } catch (reason) {
       setToast({ tone: 'error', text: reason instanceof Error ? reason.message : 'No se pudo desofuscar el video' })
     } finally {
       setDeobfuscating(false)
+    }
+  }
+
+  const openOutputFolder = async (): Promise<void> => {
+    setOpeningOutputFolder(true)
+    try {
+      await window.inspector.openOutputFolder()
+      setToast({ tone: 'success', text: 'Carpeta Cortos abierta' })
+    } catch (reason) {
+      setToast({ tone: 'error', text: reason instanceof Error ? reason.message : 'No se pudo abrir la carpeta Cortos' })
+    } finally {
+      setOpeningOutputFolder(false)
     }
   }
 
@@ -225,10 +253,15 @@ export default function App(): React.JSX.Element {
               <FileResult
                 file={file}
                 opening={opening}
+                openingOutputFolder={openingOutputFolder}
                 deobfuscating={deobfuscating}
                 deleting={deleting}
+                outputName={outputName}
+                outputFolder={outputFolder}
+                onOutputNameChange={setOutputName}
                 onReveal={reveal}
                 onCopy={copyPath}
+                onOpenOutputFolder={openOutputFolder}
                 onDeobfuscate={deobfuscate}
                 onEmptyFolder={emptyFolder}
               />
@@ -279,8 +312,8 @@ export default function App(): React.JSX.Element {
             <div className="scope-note">
               <CircleAlert size={16} />
               <p>
-                Desofuscar guarda una copia donde elijas. Eliminar todo pide confirmacion y usa la Papelera; no cambia
-                funciones de licencia.
+                Desofuscar guarda la copia en Videos\Cortos. Eliminar todo pide confirmacion y usa la Papelera; no
+                cambia funciones de licencia.
               </p>
             </div>
           </aside>
@@ -327,23 +360,33 @@ function GuideStep({
 function FileResult({
   file,
   opening,
+  openingOutputFolder,
   deobfuscating,
   deleting,
+  outputName,
+  outputFolder,
+  onOutputNameChange,
   onReveal,
   onCopy,
+  onOpenOutputFolder,
   onDeobfuscate,
   onEmptyFolder
 }: {
   file: Mp4FileInfo
   opening: boolean
+  openingOutputFolder: boolean
   deobfuscating: boolean
   deleting: boolean
+  outputName: string
+  outputFolder: string
+  onOutputNameChange: (value: string) => void
   onReveal: (file: Mp4FileInfo) => Promise<void>
   onCopy: (file: Mp4FileInfo) => Promise<void>
+  onOpenOutputFolder: () => Promise<void>
   onDeobfuscate: (file: Mp4FileInfo) => Promise<void>
   onEmptyFolder: (file: Mp4FileInfo) => Promise<void>
 }): React.JSX.Element {
-  const busy = opening || deobfuscating || deleting
+  const busy = opening || openingOutputFolder || deobfuscating || deleting
   return (
     <article className="file-card">
       <div className="file-heading">
@@ -376,6 +419,25 @@ function FileResult({
         <span>RUTA COMPLETA</span>
         <code title={file.filePath}>{file.filePath}</code>
       </div>
+      <div className="output-settings">
+        <label htmlFor="output-name">
+          <span>NOMBRE DE SALIDA (OPCIONAL)</span>
+          <input
+            id="output-name"
+            value={outputName}
+            maxLength={180}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="Ej. corto-verano"
+            onChange={(event) => onOutputNameChange(event.target.value)}
+          />
+          <small>Puede escribirse con o sin .mp4.</small>
+        </label>
+        <div className="output-destination">
+          <span>CARPETA DE SALIDA</span>
+          <code title={outputFolder}>{outputFolder}</code>
+        </div>
+      </div>
       <div className="actions">
         <button className="button button-primary" disabled={busy} onClick={() => void onReveal(file)}>
           <FolderOpen size={18} />
@@ -384,6 +446,10 @@ function FileResult({
         <button className="button button-ghost" disabled={busy} onClick={() => void onCopy(file)}>
           <Copy size={17} />
           Copiar ruta
+        </button>
+        <button className="button button-ghost" disabled={busy} onClick={() => void onOpenOutputFolder()}>
+          <FolderOpen size={17} />
+          {openingOutputFolder ? 'Abriendo Cortos...' : 'Abrir Cortos'}
         </button>
         <button className="button button-secondary" disabled={busy} onClick={() => void onDeobfuscate(file)}>
           {deobfuscating ? <RefreshCw className="spinning" size={17} /> : <Sparkles size={17} />}

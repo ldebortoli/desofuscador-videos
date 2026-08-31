@@ -1,6 +1,6 @@
 {
   "name": "clip-cache-inspector",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Aplicacion Windows para localizar, analizar y recuperar MP4 internos de CapCut",
   "main": "./out/main/index.js",
   "author": "Lucas De Bortoli",

@@ -71,6 +71,8 @@ export interface InspectorApi {
   scan: () => Promise<ScanResult>
   reveal: (path: string) => Promise<void>
   copyPath: (path: string) => Promise<void>
-  deobfuscate: (path: string) => Promise<DeobfuscationResult>
+  getOutputFolder: () => Promise<string>
+  openOutputFolder: () => Promise<void>
+  deobfuscate: (path: string, outputName?: string) => Promise<DeobfuscationResult>
   emptyFolder: (path: string) => Promise<FolderCleanupResult>
 }

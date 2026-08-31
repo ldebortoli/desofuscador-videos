@@ -6,6 +6,7 @@ import { _electron as electron } from 'playwright-core'
 const projectRoot = resolve(import.meta.dirname, '..')
 const temporaryDirectory = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-e2e-'))
 const localAppData = join(temporaryDirectory, 'local-app-data')
+const outputDirectory = join(temporaryDirectory, 'videos', 'Cortos')
 const filePath = join(
   localAppData,
   'CapCut',
@@ -34,7 +35,8 @@ const app = await electron.launch({
     ...process.env,
     NODE_ENV: 'production',
     CCI_E2E_USER_DATA_DIR: join(temporaryDirectory, 'user-data'),
-    CCI_LOCAL_APP_DATA: localAppData
+    CCI_LOCAL_APP_DATA: localAppData,
+    CCI_OUTPUT_DIRECTORY: outputDirectory
   }
 })
 
@@ -49,24 +51,40 @@ try {
   }
   if (
     !(await page.evaluate(() =>
-      Boolean(window.inspector?.scan && window.inspector?.deobfuscate && window.inspector?.emptyFolder)
+      Boolean(
+        window.inspector?.scan &&
+        window.inspector?.deobfuscate &&
+        window.inspector?.emptyFolder &&
+        window.inspector?.openOutputFolder
+      )
     ))
   )
     throw new Error('El preload aislado no expuso la API')
-  await app.evaluate(({ dialog, shell }) => {
+  await app.evaluate(({ dialog, ipcMain, shell }) => {
     shell.__clipCacheRevealedPaths = []
     shell.__clipCacheTrashedPaths = []
+    shell.__clipCacheOpenedPaths = []
+    shell.__clipCacheDeobfuscations = []
     shell.showItemInFolder = (path) => {
       shell.__clipCacheRevealedPaths.push(path)
     }
     shell.trashItem = async (path) => {
       shell.__clipCacheTrashedPaths.push(path)
     }
-    dialog.showSaveDialog = async () => ({ canceled: true })
+    shell.openPath = async (path) => {
+      shell.__clipCacheOpenedPaths.push(path)
+      return ''
+    }
+    ipcMain.removeHandler('inspector:deobfuscate')
+    ipcMain.handle('inspector:deobfuscate', async (_event, path, outputName) => {
+      shell.__clipCacheDeobfuscations.push({ path, outputName })
+      return { status: 'completed', outputPath: 'C:\\Videos\\Cortos\\corto-e2e.mp4' }
+    })
     dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false })
   })
 
   await page.getByTestId('detected-file-name').filter({ hasText: 'efecto-control-e2e.mp4' }).waitFor()
+  await page.getByText(outputDirectory).waitFor()
   await page.getByTestId('media-analysis-status').filter({ hasText: 'Incompleto' }).waitFor()
   await page.getByText(/estructura MP4 analizable|bloque moov/i).waitFor()
   await page.locator('.file-card').screenshot({ path: actionsScreenshotPath })
@@ -86,8 +104,22 @@ try {
   const copied = await app.evaluate(({ clipboard }) => clipboard.readText())
   if (copied !== filePath) throw new Error('No se copio la ruta exacta')
 
+  await page.getByRole('textbox', { name: /nombre de salida/i }).fill('corto-e2e')
   await page.getByRole('button', { name: 'Desofuscar' }).click()
-  await page.getByText('Desofuscacion cancelada; no se hicieron cambios').waitFor()
+  await page.getByText('Video guardado en Cortos y seleccionado en Explorer').waitFor()
+  const deobfuscations = await app.evaluate(({ shell }) => shell.__clipCacheDeobfuscations)
+  if (
+    deobfuscations.length !== 1 ||
+    deobfuscations[0].path !== filePath ||
+    deobfuscations[0].outputName !== 'corto-e2e'
+  ) {
+    throw new Error('El nombre opcional no llego al proceso principal')
+  }
+
+  await page.getByRole('button', { name: 'Abrir Cortos' }).click()
+  await page.getByText('Carpeta Cortos abierta').waitFor()
+  const openedPaths = await app.evaluate(({ shell }) => shell.__clipCacheOpenedPaths)
+  if (!openedPaths.includes(outputDirectory)) throw new Error('No se abrio la carpeta Cortos configurada')
 
   await page.getByRole('button', { name: 'Eliminar todo' }).click()
   await page.getByText('Eliminacion cancelada; no se movio ningun archivo').waitFor()
@@ -105,7 +137,7 @@ try {
     throw new Error('La ventana no conservo identidad o dimensiones minimas')
   }
   console.log(
-    `Electron smoke OK: deteccion, acciones cancelables, revelado, copia, vacio y screenshot en ${screenshotPath}`
+    `Electron smoke OK: nombre de salida, Abrir Cortos, revelado, copia, vacio y screenshot en ${screenshotPath}`
   )
 } finally {
   await app.close()

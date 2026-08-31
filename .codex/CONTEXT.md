@@ -23,8 +23,8 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 ## Ejecucion y tests
 
 - `npm run quality`: lint, formato, tipos, version gate y escaneo local de secretos.
-- `npm run test:coverage`: 41/41 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
-- `npm run test:e2e`: Electron real con deteccion, revelado, portapapeles, cancelacion segura de las acciones, vacio y capturas.
+- `npm run test:coverage`: 47/47 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
+- `npm run test:e2e`: Electron real con deteccion, nombre opcional, apertura de Cortos, revelado, portapapeles, cancelacion segura del vaciado y capturas.
 - `npm run package`: portable Windows x64.
 - `npm run install:shortcut`: instala/verifica `Clip Cache Inspector.lnk` en Codex Apps.
 
@@ -42,5 +42,6 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 - Desde 0.3.0 se incluye ffprobe Windows x64 para mostrar codec, perfil, resolucion, FPS, duracion, bitrate, pixel, contenedor y audio; caches sin `moov` se marcan como incompletos.
 - Desde 0.3.1, si ffprobe no puede abrir un recurso, se consulta el JSON local `Cache/importcache3/mediainfo/<hash>.json`; `isCryptorFile` se muestra como `Interno CapCut`.
 - Desde 0.4.0, `Desofuscar` usa el detector BDVE versionado y el ffprobe incluido, conserva el original y valida completamente la salida elegida. `Eliminar todo` muestra ruta/cantidad, requiere confirmacion, envia cada hijo a la Papelera y conserva la carpeta contenedora.
-- El portable 0.4.0 vive en `release/Clip-Cache-Inspector-0.4.0-x64.exe`; la carpeta `release/` no se versiona.
+- Desde 0.5.0, la salida se fija en `%USERPROFILE%\Videos\Cortos`; la tarjeta muestra el destino, acepta un nombre opcional validado, evita sobrescrituras con sufijos y permite abrir la carpeta.
+- El portable 0.5.0 vive en `release/Clip-Cache-Inspector-0.5.0-x64.exe`; la carpeta `release/` no se versiona.
 - Si el proyecto tiene una UI para controlar un bot, servidor o proceso en segundo plano, cerrar esa UI debe detener el proceso administrado cuando sea tecnicamente posible.

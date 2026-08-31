@@ -8,6 +8,7 @@ No hay tareas en curso.
 
 # DONE
 
+- [2026-08-31] Entregar Clip Cache Inspector 0.5.0 con salida fija en `%USERPROFILE%\Videos\Cortos`, nombre de archivo opcional validado, sufijo anticolision y boton para abrir esa carpeta.
 - [2026-08-31] Entregar Clip Cache Inspector 0.4.0 con `Desofuscar` mediante el detector BDVE automatico y `Eliminar todo` para enviar a la Papelera solo el contenido de la carpeta CapCut detectada, conservando la carpeta y agregando validacion estricta, confirmacion y pruebas.
 - [2026-08-31] Corregir en 0.3.1 el diagnostico de recursos `isCryptorFile`: leer el indice local de CapCut, mostrar H.264/AAC y distinguirlos de un MP4 realmente incompleto.
 - [2026-08-30] Agregar en 0.3.0 analisis tecnico automatico con ffprobe incluido: codec, perfil, resolucion, FPS, duracion, bitrate, pixel, contenedor y audio, con estado explicito para caches incompletos.

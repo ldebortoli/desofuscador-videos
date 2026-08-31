@@ -3,6 +3,9 @@ import { describe, expect, test, vi } from 'vitest'
 import {
   BdveDeobfuscator,
   deobfuscationError,
+  nextAvailableOutputPath,
+  normalizeOutputName,
+  resolveOutputFolder,
   suggestedOutputName,
   type DeobfuscatorOptions,
   type ToolCallback,
@@ -27,6 +30,49 @@ describe('ejecucion del detector BDVE', () => {
   test('genera un nombre de salida estable con o sin extension', () => {
     expect(suggestedOutputName('C:\\cache\\clip.mp4')).toBe('clip_desofuscado.mp4')
     expect(suggestedOutputName('clip')).toBe('clip_desofuscado.mp4')
+  })
+
+  test('resuelve Cortos bajo Videos y admite un destino configurado', () => {
+    expect(resolveOutputFolder('C:\\Users\\persona')).toBe('C:\\Users\\persona\\Videos\\Cortos')
+    expect(resolveOutputFolder('C:\\Users\\persona', '  C:\\Pruebas\\Salida  ')).toBe('C:\\Pruebas\\Salida')
+  })
+
+  test('normaliza el nombre opcional y agrega MP4 cuando falta', () => {
+    expect(normalizeOutputName('C:\\cache\\clip.mp4', undefined)).toBe('clip_desofuscado.mp4')
+    expect(normalizeOutputName('clip.mp4', '  corto final  ')).toBe('corto final.mp4')
+    expect(normalizeOutputName('clip.mp4', 'corto.MP4')).toBe('corto.MP4')
+  })
+
+  test('rechaza nombres que Windows no puede crear', () => {
+    expect(() => normalizeOutputName('clip.mp4', 7)).toThrow('no es valido')
+    expect(() => normalizeOutputName('clip.mp4', 'a'.repeat(181))).toThrow('180')
+    expect(() => normalizeOutputName('clip.mp4', 'carpeta\\video')).toThrow('caracteres')
+    expect(() => normalizeOutputName('clip.mp4', 'video\nnuevo')).toThrow('caracteres')
+    expect(() => normalizeOutputName('clip.mp4', 'video.')).toThrow('caracteres')
+    expect(() => normalizeOutputName('clip.mp4', 'video.mov')).toThrow('.mp4')
+    expect(() => normalizeOutputName('clip.mp4', 'CON')).toThrow('reservado')
+    expect(() => normalizeOutputName('clip.mp4', '.mp4')).toThrow('reservado')
+  })
+
+  test('elige un nombre libre sin sobrescribir salidas anteriores', async () => {
+    const exists = vi
+      .fn<(path: string) => Promise<boolean>>()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false)
+
+    await expect(nextAvailableOutputPath('C:\\Videos\\Cortos', 'mi-video.mp4', exists)).resolves.toBe(
+      'C:\\Videos\\Cortos\\mi-video (3).mp4'
+    )
+    await expect(nextAvailableOutputPath('C:\\Videos\\Cortos', 'libre.mp4', async () => false)).resolves.toBe(
+      'C:\\Videos\\Cortos\\libre.mp4'
+    )
+  })
+
+  test('informa cuando no quedan nombres anticolision disponibles', async () => {
+    await expect(nextAvailableOutputPath('C:\\Videos\\Cortos', 'ocupado.mp4', async () => true)).rejects.toThrow(
+      'disponible'
+    )
   })
 
   test('extrae un error util de stderr, stdout o del proceso', () => {
@@ -67,8 +113,7 @@ describe('ejecucion del detector BDVE', () => {
         '-OutputPath',
         'C:\\Videos\\clip_limpio.mp4',
         '-FfprobePath',
-        'C:\\app\\ffprobe.exe',
-        '-Force'
+        'C:\\app\\ffprobe.exe'
       ]),
       { windowsHide: true, timeout: 600_000, maxBuffer: 4_194_304 },
       expect.any(Function)

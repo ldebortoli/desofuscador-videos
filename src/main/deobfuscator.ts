@@ -1,5 +1,5 @@
 import type { ChildProcess } from 'node:child_process'
-import { basename, extname } from 'node:path'
+import { basename, extname, join, resolve } from 'node:path'
 
 export interface ToolExecutionOptions {
   windowsHide: boolean
@@ -27,6 +27,50 @@ export interface DeobfuscatorOptions {
 export function suggestedOutputName(inputPath: string): string {
   const extension = extname(inputPath)
   return `${basename(inputPath, extension)}_desofuscado.mp4`
+}
+
+export function resolveOutputFolder(homePath: string, configuredPath?: string): string {
+  const configured = configuredPath?.trim()
+  return configured ? resolve(configured) : join(homePath, 'Videos', 'Cortos')
+}
+
+export function normalizeOutputName(inputPath: string, requestedName: unknown): string {
+  if (requestedName !== undefined && typeof requestedName !== 'string')
+    throw new Error('El nombre de salida no es valido')
+
+  const trimmed = requestedName?.trim() ?? ''
+  if (!trimmed) return suggestedOutputName(inputPath)
+  if (trimmed.length > 180) throw new Error('El nombre de salida no puede superar 180 caracteres')
+  if (trimmed.toLowerCase() === '.mp4') throw new Error('Ese nombre esta reservado por Windows')
+  const hasControlCharacter = [...trimmed].some((character) => character.charCodeAt(0) < 32)
+  if (hasControlCharacter || /[<>:"/\\|?*]/u.test(trimmed) || /[. ]$/u.test(trimmed))
+    throw new Error('El nombre contiene caracteres no permitidos por Windows')
+
+  const extension = extname(trimmed)
+  if (extension && extension.toLowerCase() !== '.mp4')
+    throw new Error('Usa un nombre sin extension o con extension .mp4')
+  const fileName = extension ? trimmed : `${trimmed}.mp4`
+  const stem = fileName.slice(0, -4)
+  if (!stem || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/iu.test(stem))
+    throw new Error('Ese nombre esta reservado por Windows')
+  return fileName
+}
+
+export type PathExists = (path: string) => Promise<boolean>
+
+export async function nextAvailableOutputPath(
+  folderPath: string,
+  fileName: string,
+  pathExists: PathExists
+): Promise<string> {
+  const extension = extname(fileName)
+  const stem = basename(fileName, extension)
+  for (let copy = 1; copy <= 10_000; copy += 1) {
+    const candidateName = copy === 1 ? fileName : `${stem} (${copy})${extension}`
+    const candidatePath = join(folderPath, candidateName)
+    if (!(await pathExists(candidatePath))) return candidatePath
+  }
+  throw new Error('No se encontro un nombre de salida disponible en la carpeta Cortos')
 }
 
 function usefulErrorLine(output: string): string | null {
@@ -73,8 +117,7 @@ export class BdveDeobfuscator {
             '-OutputPath',
             outputPath,
             '-FfprobePath',
-            this.options.ffprobePath,
-            '-Force'
+            this.options.ffprobePath
           ],
           { windowsHide: true, timeout: 10 * 60_000, maxBuffer: 4 * 1024 * 1024 },
           (error, stdout, stderr) => {
