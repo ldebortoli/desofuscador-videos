@@ -1,4 +1,4 @@
-﻿# CapCut MP4 Inspector - Contexto del proyecto
+﻿# Desofuscador Videos - Contexto del proyecto
 
 ## Descripcion general
 
@@ -6,10 +6,11 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 
 ## Estado detectado
 
-- Ruta: `%USERPROFILE%\Documents\CapCut MP4 Inspector`
+- Ruta: `%USERPROFILE%\Documents\Desofuscador Videos`
 - Stack: Electron 43, React 19, TypeScript 5.9, electron-vite 5, Vitest y Playwright.
 - Git: repositorio independiente en rama `main`.
-- Remoto origin: `https://github.com/ldebortoli/capcut-mp4-inspector.git` (privado).
+- Remoto origin: `https://github.com/ldebortoli/desofuscador-videos.git` (publico).
+- GitHub Secret Scanning y Push Protection: habilitados.
 
 ## Estructura inicial
 
@@ -23,10 +24,10 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 ## Ejecucion y tests
 
 - `npm run quality`: lint, formato, tipos, version gate y escaneo local de secretos.
-- `npm run test:coverage`: 47/47 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
-- `npm run test:e2e`: Electron real con deteccion, nombre opcional, apertura de Cortos, revelado, portapapeles, cancelacion segura del vaciado y capturas.
+- `npm run test:coverage`: 51/51 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo medido.
+- `npm run test:e2e`: Electron real con deteccion, selector de salida, fila unica de acciones, revelado, portapapeles, cancelacion segura del vaciado y capturas.
 - `npm run package`: portable Windows x64.
-- `npm run install:shortcut`: instala/verifica `Clip Cache Inspector.lnk` en Codex Apps.
+- `npm run install:shortcut`: instala/verifica `Desofuscador Videos.lnk` en Codex Apps.
 
 ## Convenciones
 
@@ -43,5 +44,7 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 - Desde 0.3.1, si ffprobe no puede abrir un recurso, se consulta el JSON local `Cache/importcache3/mediainfo/<hash>.json`; `isCryptorFile` se muestra como `Interno CapCut`.
 - Desde 0.4.0, `Desofuscar` usa el detector BDVE versionado y el ffprobe incluido, conserva el original y valida completamente la salida elegida. `Eliminar todo` muestra ruta/cantidad, requiere confirmacion, envia cada hijo a la Papelera y conserva la carpeta contenedora.
 - Desde 0.5.0, la salida se fija en `%USERPROFILE%\Videos\Cortos`; la tarjeta muestra el destino, acepta un nombre opcional validado, evita sobrescrituras con sufijos y permite abrir la carpeta.
-- El portable 0.5.0 vive en `release/Clip-Cache-Inspector-0.5.0-x64.exe`; la carpeta `release/` no se versiona.
+- Desde 0.6.0, el producto se llama `Desofuscador Videos`; las cinco acciones ocupan una sola fila y la carpeta de salida puede elegirse con un dialogo nativo. La preferencia se guarda localmente y conserva `%USERPROFILE%\Videos\Cortos` como valor inicial.
+- El portable 0.6.0 vive en `release/Desofuscador-Videos-0.6.0-x64.exe`; la carpeta `release/` no se versiona.
+- GitHub ejecuta calidad y cobertura en push/PR. E2E y empaquetado quedan en un workflow manual para proteger cuota.
 - Si el proyecto tiene una UI para controlar un bot, servidor o proceso en segundo plano, cerrar esa UI debe detener el proceso administrado cuando sea tecnicamente posible.

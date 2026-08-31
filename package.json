@@ -1,6 +1,6 @@
 {
-  "name": "clip-cache-inspector",
-  "version": "0.5.0",
+  "name": "desofuscador-videos",
+  "version": "0.6.0",
   "description": "Aplicacion Windows para localizar, analizar y recuperar MP4 internos de CapCut",
   "main": "./out/main/index.js",
   "author": "Lucas De Bortoli",
@@ -58,8 +58,8 @@
     "vitest": "4.1.10"
   },
   "build": {
-    "appId": "com.local.clipcacheinspector",
-    "productName": "Clip Cache Inspector",
+    "appId": "com.local.desofuscadorvideos",
+    "productName": "Desofuscador Videos",
     "asar": true,
     "asarUnpack": [
       "node_modules/@ffprobe-installer/win32-x64/ffprobe.exe"
@@ -84,7 +84,7 @@
       "target": [
         "portable"
       ],
-      "artifactName": "Clip-Cache-Inspector-${version}-${arch}.${ext}"
+      "artifactName": "Desofuscador-Videos-${version}-${arch}.${ext}"
     }
   }
 }

@@ -481,7 +481,9 @@ main {
   border-left: 1px solid var(--line-soft);
 }
 .output-destination code {
+  min-width: 0;
   display: block;
+  flex: 1;
   overflow: hidden;
   color: #c3b09f;
   font-size: 10px;
@@ -489,14 +491,46 @@ main {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.actions {
+.output-destination-row {
+  min-width: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
+  align-items: center;
+  gap: 8px;
+}
+.output-change-button {
+  min-height: 30px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 9px;
+  color: #c8b9aa;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.output-change-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+.output-change-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+.actions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
   margin-top: 19px;
 }
-.actions .button-danger {
-  margin-left: auto;
+.actions .button {
+  min-width: 0;
+  gap: 6px;
+  padding: 0 8px;
+  white-space: nowrap;
 }
 .state-panel {
   width: min(500px, 100%);
@@ -841,9 +875,6 @@ footer {
   .metadata > div + div {
     border-top: 1px solid var(--line-soft);
     border-left: 0;
-  }
-  .actions .button-danger {
-    margin-left: 0;
   }
   .output-settings {
     grid-template-columns: 1fr;

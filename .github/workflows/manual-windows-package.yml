@@ -1,0 +1,37 @@
+name: E2E y portable de Windows
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Ejecutar prueba Electron
+        run: npm run test:e2e
+      - name: Crear portable
+        run: npm run package
+      - name: Guardar portable temporalmente
+        uses: actions/upload-artifact@v4
+        with:
+          name: desofuscador-videos-windows
+          path: release/Desofuscador-Videos-*-x64.exe
+          if-no-files-found: error
+          retention-days: 3

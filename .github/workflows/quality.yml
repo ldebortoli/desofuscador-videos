@@ -1,4 +1,4 @@
-name: Quality
+name: Calidad
 
 on:
   push:
@@ -6,8 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
-  group: quality-${{ github.ref }}
+  group: quality-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -15,14 +18,20 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-      - uses: actions/setup-node@v4
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm run quality
-      - run: npm run test:coverage
-      - run: npm run build
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Validar codigo y secretos
+        run: npm run quality
+      - name: Ejecutar cobertura
+        run: npm run test:coverage
+      - name: Compilar aplicacion
+        run: npm run build
+      - name: Auditar dependencias de ejecucion
+        run: npm run audit

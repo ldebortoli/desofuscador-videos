@@ -21,7 +21,7 @@ afterEach(async () => {
 })
 
 async function makeInspector(): Promise<{ inspector: CapCutInspector; root: string }> {
-  const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-'))
+  const root = await mkdtemp(join(tmpdir(), 'desofuscador-videos-'))
   temporaryDirectories.push(root)
   return { inspector: new CapCutInspector(root, undefined, async () => unavailableMedia), root }
 }
@@ -182,7 +182,7 @@ describe('deteccion segura de archivos CapCut', () => {
   })
 
   test('analiza el archivo elegido con el ffprobe incluido', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-probe-'))
+    const root = await mkdtemp(join(tmpdir(), 'desofuscador-videos-probe-'))
     temporaryDirectories.push(root)
     const inspector = new CapCutInspector(root)
     const presetRoot = inspector.locations[1]
@@ -195,7 +195,7 @@ describe('deteccion segura de archivos CapCut', () => {
   })
 
   test('usa el indice de CapCut cuando ffprobe no puede abrir un recurso protegido', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-index-'))
+    const root = await mkdtemp(join(tmpdir(), 'desofuscador-videos-index-'))
     temporaryDirectories.push(root)
     const inspector = new CapCutInspector(root)
     const presetRoot = inspector.locations[1]
@@ -225,7 +225,7 @@ describe('deteccion segura de archivos CapCut', () => {
   })
 
   test('conserva el resultado de ffprobe para un MP4 valido sin consultar el indice', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-valid-'))
+    const root = await mkdtemp(join(tmpdir(), 'desofuscador-videos-valid-'))
     temporaryDirectories.push(root)
     const inspector = new CapCutInspector(root)
     const presetRoot = inspector.locations[1]
@@ -242,7 +242,7 @@ describe('deteccion segura de archivos CapCut', () => {
   })
 
   test('ignora un indice presente que no contiene metadata multimedia', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-empty-index-'))
+    const root = await mkdtemp(join(tmpdir(), 'desofuscador-videos-empty-index-'))
     temporaryDirectories.push(root)
     const inspector = new CapCutInspector(root)
     const presetRoot = inspector.locations[1]

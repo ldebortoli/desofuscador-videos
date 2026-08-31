@@ -6,6 +6,7 @@ const api: InspectorApi = {
   reveal: (path) => ipcRenderer.invoke('inspector:reveal', path),
   copyPath: (path) => ipcRenderer.invoke('inspector:copy-path', path),
   getOutputFolder: () => ipcRenderer.invoke('inspector:get-output-folder'),
+  chooseOutputFolder: () => ipcRenderer.invoke('inspector:choose-output-folder'),
   openOutputFolder: () => ipcRenderer.invoke('inspector:open-output-folder'),
   deobfuscate: (path, outputName) => ipcRenderer.invoke('inspector:deobfuscate', path, outputName),
   emptyFolder: (path) => ipcRenderer.invoke('inspector:empty-folder', path)

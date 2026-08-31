@@ -8,6 +8,7 @@ const scan = vi.fn<() => Promise<ScanResult>>()
 const reveal = vi.fn<(path: string) => Promise<void>>()
 const copyPath = vi.fn<(path: string) => Promise<void>>()
 const getOutputFolder = vi.fn<() => Promise<string>>()
+const chooseOutputFolder = vi.fn<() => Promise<{ status: 'completed' | 'cancelled'; folderPath: string }>>()
 const openOutputFolder = vi.fn<() => Promise<void>>()
 const deobfuscate =
   vi.fn<(path: string, outputName?: string) => Promise<{ status: 'completed' | 'cancelled'; outputPath?: string }>>()
@@ -65,6 +66,10 @@ beforeEach(() => {
   reveal.mockReset().mockResolvedValue(undefined)
   copyPath.mockReset().mockResolvedValue(undefined)
   getOutputFolder.mockReset().mockResolvedValue('C:\\Videos\\Cortos')
+  chooseOutputFolder.mockReset().mockResolvedValue({
+    status: 'completed',
+    folderPath: 'D:\\Videos\\Salida'
+  })
   openOutputFolder.mockReset().mockResolvedValue(undefined)
   deobfuscate
     .mockReset()
@@ -72,7 +77,16 @@ beforeEach(() => {
   emptyFolder.mockReset().mockResolvedValue({ status: 'cancelled' })
   Object.defineProperty(window, 'inspector', {
     configurable: true,
-    value: { scan, reveal, copyPath, getOutputFolder, openOutputFolder, deobfuscate, emptyFolder }
+    value: {
+      scan,
+      reveal,
+      copyPath,
+      getOutputFolder,
+      chooseOutputFolder,
+      openOutputFolder,
+      deobfuscate,
+      emptyFolder
+    }
   })
 })
 
@@ -113,12 +127,12 @@ describe('interfaz principal', () => {
     render(<App />)
     await screen.findByTestId('detected-file-name')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Abrir carpeta' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir' }))
     await waitFor(() => expect(reveal).toHaveBeenCalledWith(populated.file?.filePath))
     expect(screen.getByRole('status')).toHaveTextContent('Carpeta abierta')
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar aviso' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar ruta' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ruta' }))
     await waitFor(() => expect(copyPath).toHaveBeenCalledWith(populated.file?.filePath))
     expect(screen.getByRole('status')).toHaveTextContent('Ruta copiada')
   })
@@ -140,33 +154,38 @@ describe('interfaz principal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Desofuscar' }))
     expect(screen.getByRole('button', { name: 'Desofuscando...' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Eliminar todo' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Limpiar carpeta' })).toBeDisabled()
     complete?.({ status: 'completed', outputPath: 'C:\\Videos\\efecto-limpio.mp4' })
 
     await waitFor(() => expect(deobfuscate).toHaveBeenCalledWith(populated.file?.filePath, 'mi-corto'))
-    expect(await screen.findByRole('status')).toHaveTextContent('Video guardado en Cortos')
+    expect(await screen.findByRole('status')).toHaveTextContent('Video guardado en la carpeta de salida')
   })
 
-  test('abre la carpeta fija de videos cortos', async () => {
+  test('cambia y abre la carpeta de salida', async () => {
     render(<App />)
     await screen.findByTestId('detected-file-name')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Abrir Cortos' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    await waitFor(() => expect(chooseOutputFolder).toHaveBeenCalledOnce())
+    expect(screen.getByText('D:\\Videos\\Salida')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Carpeta de salida actualizada')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir salida' }))
     await waitFor(() => expect(openOutputFolder).toHaveBeenCalledOnce())
-    expect(screen.getByRole('status')).toHaveTextContent('Carpeta Cortos abierta')
+    expect(screen.getByRole('status')).toHaveTextContent('Carpeta de salida abierta')
   })
 
   test('cancela o confirma el vaciado sin borrar la carpeta contenedora desde la interfaz', async () => {
     render(<App />)
     await screen.findByTestId('detected-file-name')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Eliminar todo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar carpeta' }))
     await waitFor(() => expect(emptyFolder).toHaveBeenCalledWith(populated.file?.filePath))
     expect(screen.getByRole('status')).toHaveTextContent('Eliminacion cancelada')
     expect(scan).toHaveBeenCalledTimes(1)
 
     emptyFolder.mockResolvedValueOnce({ status: 'completed', removedCount: 4 })
-    fireEvent.click(screen.getByRole('button', { name: 'Eliminar todo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar carpeta' }))
     await waitFor(() => expect(scan).toHaveBeenCalledTimes(2))
     expect(screen.getByRole('status')).toHaveTextContent('4 elementos enviados a la Papelera')
   })
@@ -244,20 +263,23 @@ describe('interfaz principal', () => {
     reveal.mockRejectedValue(new Error('El archivo desaparecio'))
     copyPath.mockRejectedValue(new Error('Portapapeles ocupado'))
     openOutputFolder.mockRejectedValue(new Error('Explorer no responde'))
+    chooseOutputFolder.mockRejectedValue(new Error('Selector no disponible'))
     deobfuscate.mockRejectedValue(new Error('No es un archivo BDVE'))
     emptyFolder.mockRejectedValue(new Error('Archivo en uso'))
     render(<App />)
     await screen.findByTestId('detected-file-name')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Abrir carpeta' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir' }))
     expect(await screen.findByRole('status')).toHaveTextContent('El archivo desaparecio')
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar ruta' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ruta' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Portapapeles ocupado')
-    fireEvent.click(screen.getByRole('button', { name: 'Abrir Cortos' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Selector no disponible')
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir salida' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Explorer no responde')
     fireEvent.click(screen.getByRole('button', { name: 'Desofuscar' }))
     expect(await screen.findByRole('status')).toHaveTextContent('No es un archivo BDVE')
-    fireEvent.click(screen.getByRole('button', { name: 'Eliminar todo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar carpeta' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Archivo en uso')
   })
 })

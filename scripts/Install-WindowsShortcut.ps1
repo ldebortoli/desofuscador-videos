@@ -4,9 +4,10 @@ param()
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $package = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'package.json') | ConvertFrom-Json
-$artifact = Join-Path $projectRoot "release\Clip-Cache-Inspector-$($package.version)-x64.exe"
+$artifact = Join-Path $projectRoot "release\Desofuscador-Videos-$($package.version)-x64.exe"
 $shortcutDirectory = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Codex\CODEX APPS'
-$shortcutPath = Join-Path $shortcutDirectory 'Clip Cache Inspector.lnk'
+$shortcutPath = Join-Path $shortcutDirectory 'Desofuscador Videos.lnk'
+$previousShortcutPath = Join-Path $shortcutDirectory 'Clip Cache Inspector.lnk'
 
 if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) {
   throw "No se encontro el ejecutable requerido: $artifact"
@@ -18,13 +19,17 @@ $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $artifact
 $shortcut.WorkingDirectory = Split-Path -Parent $artifact
 $shortcut.IconLocation = "$artifact,0"
-$shortcut.Description = 'Localiza, analiza y recupera MP4 internos de CapCut'
+$shortcut.Description = 'Desofusca y recupera videos internos compatibles de CapCut'
 $shortcut.WindowStyle = 1
 $shortcut.Save()
 
 $verified = $shell.CreateShortcut($shortcutPath)
 if ($verified.TargetPath -ne $artifact -or ($verified.IconLocation -split ',')[0] -ne $artifact) {
   throw 'El acceso directo no conservo el ejecutable o icono esperado'
+}
+
+if (Test-Path -LiteralPath $previousShortcutPath -PathType Leaf) {
+  Remove-Item -LiteralPath $previousShortcutPath -Force
 }
 
 $iconRefresh = Join-Path $env:WINDIR 'System32\ie4uinit.exe'

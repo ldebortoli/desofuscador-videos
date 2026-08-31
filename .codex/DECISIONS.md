@@ -85,3 +85,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-31.
 - Decision: desde 0.5.0 guardar las copias desofuscadas en `%USERPROFILE%\Videos\Cortos`, mostrar esa ruta en la tarjeta y ofrecer `Abrir Cortos`. El nombre ingresado es opcional, se limita a un nombre de archivo Windows con extension MP4 y nunca controla una ruta. Si el destino ya existe, elegir automaticamente `(2)`, `(3)`, etc.; no sobrescribirlo.
 - Motivo: reducir pasos y mantener todos los cortos en un destino predecible sin perder salidas anteriores ni permitir traversal desde el renderer.
+
+## D-013 - Identidad Desofuscador Videos, salida configurable y repositorio publico
+
+- Estado: vigente; reemplaza el destino fijo de D-012, pero conserva sus reglas de nombre y anticolision.
+- Fecha: 2026-08-31.
+- Decision: desde 0.6.0 llamar al producto, carpeta local, ventana y acceso `Desofuscador Videos`; usar `desofuscador-videos` como nombre de paquete y repositorio. Mantener `Abrir`, `Ruta`, `Abrir salida`, `Desofuscar` y `Limpiar carpeta` en una sola fila. Elegir la salida mediante dialogo nativo, aceptar solo una ruta absoluta y persistirla en los datos locales de la app; el valor inicial sigue siendo `%USERPROFILE%\Videos\Cortos`. Publicar el repositorio con Secret Scanning y Push Protection habilitados, calidad/cobertura en push y PR, y E2E/empaquetado solo por ejecucion manual.
+- Motivo: simplificar la barra de acciones, permitir que cada usuario organice sus videos sin exponer entrada de rutas arbitrarias y entregar el proyecto bajo el nombre y visibilidad solicitados con controles proporcionales a un repositorio publico.

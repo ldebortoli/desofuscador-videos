@@ -7,6 +7,7 @@ import {
   Copy,
   ExternalLink,
   FileVideo2,
+  FolderCog,
   FolderOpen,
   HardDrive,
   RefreshCw,
@@ -30,6 +31,7 @@ export default function App(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [opening, setOpening] = useState(false)
   const [openingOutputFolder, setOpeningOutputFolder] = useState(false)
+  const [choosingOutputFolder, setChoosingOutputFolder] = useState(false)
   const [deobfuscating, setDeobfuscating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [outputName, setOutputName] = useState('')
@@ -107,7 +109,7 @@ export default function App(): React.JSX.Element {
       const action = await window.inspector.deobfuscate(file.filePath, outputName)
       setToast(
         action.status === 'completed'
-          ? { tone: 'success', text: 'Video guardado en Cortos y seleccionado en Explorer' }
+          ? { tone: 'success', text: 'Video guardado en la carpeta de salida y seleccionado en Explorer' }
           : { tone: 'success', text: 'Desofuscacion cancelada; no se hicieron cambios' }
       )
     } catch (reason) {
@@ -121,11 +123,32 @@ export default function App(): React.JSX.Element {
     setOpeningOutputFolder(true)
     try {
       await window.inspector.openOutputFolder()
-      setToast({ tone: 'success', text: 'Carpeta Cortos abierta' })
+      setToast({ tone: 'success', text: 'Carpeta de salida abierta' })
     } catch (reason) {
-      setToast({ tone: 'error', text: reason instanceof Error ? reason.message : 'No se pudo abrir la carpeta Cortos' })
+      setToast({
+        tone: 'error',
+        text: reason instanceof Error ? reason.message : 'No se pudo abrir la carpeta de salida'
+      })
     } finally {
       setOpeningOutputFolder(false)
+    }
+  }
+
+  const chooseOutputFolder = async (): Promise<void> => {
+    setChoosingOutputFolder(true)
+    try {
+      const action = await window.inspector.chooseOutputFolder()
+      if (action.status === 'completed') {
+        setOutputFolder(action.folderPath)
+        setToast({ tone: 'success', text: 'Carpeta de salida actualizada' })
+      }
+    } catch (reason) {
+      setToast({
+        tone: 'error',
+        text: reason instanceof Error ? reason.message : 'No se pudo cambiar la carpeta de salida'
+      })
+    } finally {
+      setChoosingOutputFolder(false)
     }
   }
 
@@ -160,8 +183,8 @@ export default function App(): React.JSX.Element {
             <ScanSearch size={25} strokeWidth={1.7} />
           </span>
           <span>
-            <strong>CLIP CACHE</strong>
-            <small>MP4 INSPECTOR</small>
+            <strong>DESOFUSCADOR</strong>
+            <small>VIDEOS</small>
           </span>
         </div>
         <div className="header-status">
@@ -254,6 +277,7 @@ export default function App(): React.JSX.Element {
                 file={file}
                 opening={opening}
                 openingOutputFolder={openingOutputFolder}
+                choosingOutputFolder={choosingOutputFolder}
                 deobfuscating={deobfuscating}
                 deleting={deleting}
                 outputName={outputName}
@@ -262,6 +286,7 @@ export default function App(): React.JSX.Element {
                 onReveal={reveal}
                 onCopy={copyPath}
                 onOpenOutputFolder={openOutputFolder}
+                onChooseOutputFolder={chooseOutputFolder}
                 onDeobfuscate={deobfuscate}
                 onEmptyFolder={emptyFolder}
               />
@@ -312,8 +337,8 @@ export default function App(): React.JSX.Element {
             <div className="scope-note">
               <CircleAlert size={16} />
               <p>
-                Desofuscar guarda la copia en Videos\Cortos. Eliminar todo pide confirmacion y usa la Papelera; no
-                cambia funciones de licencia.
+                Desofuscar guarda la copia en la carpeta de salida configurada. Limpiar carpeta pide confirmacion y usa
+                la Papelera; no cambia funciones de licencia.
               </p>
             </div>
           </aside>
@@ -321,7 +346,7 @@ export default function App(): React.JSX.Element {
       </main>
 
       <footer>
-        <span>Clip Cache Inspector</span>
+        <span>Desofuscador Videos</span>
         <span>No afiliado a CapCut o ByteDance.</span>
       </footer>
       {toast && (
@@ -361,6 +386,7 @@ function FileResult({
   file,
   opening,
   openingOutputFolder,
+  choosingOutputFolder,
   deobfuscating,
   deleting,
   outputName,
@@ -369,12 +395,14 @@ function FileResult({
   onReveal,
   onCopy,
   onOpenOutputFolder,
+  onChooseOutputFolder,
   onDeobfuscate,
   onEmptyFolder
 }: {
   file: Mp4FileInfo
   opening: boolean
   openingOutputFolder: boolean
+  choosingOutputFolder: boolean
   deobfuscating: boolean
   deleting: boolean
   outputName: string
@@ -383,10 +411,11 @@ function FileResult({
   onReveal: (file: Mp4FileInfo) => Promise<void>
   onCopy: (file: Mp4FileInfo) => Promise<void>
   onOpenOutputFolder: () => Promise<void>
+  onChooseOutputFolder: () => Promise<void>
   onDeobfuscate: (file: Mp4FileInfo) => Promise<void>
   onEmptyFolder: (file: Mp4FileInfo) => Promise<void>
 }): React.JSX.Element {
-  const busy = opening || openingOutputFolder || deobfuscating || deleting
+  const busy = opening || openingOutputFolder || choosingOutputFolder || deobfuscating || deleting
   return (
     <article className="file-card">
       <div className="file-heading">
@@ -435,29 +464,60 @@ function FileResult({
         </label>
         <div className="output-destination">
           <span>CARPETA DE SALIDA</span>
-          <code title={outputFolder}>{outputFolder}</code>
+          <div className="output-destination-row">
+            <code title={outputFolder}>{outputFolder}</code>
+            <button
+              className="output-change-button"
+              disabled={busy}
+              title="Elegir otra carpeta de salida"
+              onClick={() => void onChooseOutputFolder()}
+            >
+              {choosingOutputFolder ? <RefreshCw className="spinning" size={14} /> : <FolderCog size={14} />}
+              {choosingOutputFolder ? 'Cambiando...' : 'Cambiar'}
+            </button>
+          </div>
         </div>
       </div>
       <div className="actions">
-        <button className="button button-primary" disabled={busy} onClick={() => void onReveal(file)}>
+        <button
+          className="button button-primary"
+          disabled={busy}
+          title="Abrir la carpeta del archivo detectado"
+          onClick={() => void onReveal(file)}
+        >
           <FolderOpen size={18} />
-          {opening ? 'Abriendo...' : 'Abrir carpeta'}
+          {opening ? 'Abriendo...' : 'Abrir'}
         </button>
-        <button className="button button-ghost" disabled={busy} onClick={() => void onCopy(file)}>
+        <button
+          className="button button-ghost"
+          disabled={busy}
+          title="Copiar la ruta completa"
+          onClick={() => void onCopy(file)}
+        >
           <Copy size={17} />
-          Copiar ruta
+          Ruta
         </button>
-        <button className="button button-ghost" disabled={busy} onClick={() => void onOpenOutputFolder()}>
+        <button
+          className="button button-ghost"
+          disabled={busy}
+          title="Abrir la carpeta de salida"
+          onClick={() => void onOpenOutputFolder()}
+        >
           <FolderOpen size={17} />
-          {openingOutputFolder ? 'Abriendo Cortos...' : 'Abrir Cortos'}
+          {openingOutputFolder ? 'Abriendo...' : 'Abrir salida'}
         </button>
         <button className="button button-secondary" disabled={busy} onClick={() => void onDeobfuscate(file)}>
           {deobfuscating ? <RefreshCw className="spinning" size={17} /> : <Sparkles size={17} />}
           {deobfuscating ? 'Desofuscando...' : 'Desofuscar'}
         </button>
-        <button className="button button-danger" disabled={busy} onClick={() => void onEmptyFolder(file)}>
+        <button
+          className="button button-danger"
+          disabled={busy}
+          title="Enviar a la Papelera todo el contenido de la carpeta detectada"
+          onClick={() => void onEmptyFolder(file)}
+        >
           <Trash2 size={17} />
-          {deleting ? 'Eliminando...' : 'Eliminar todo'}
+          {deleting ? 'Limpiando...' : 'Limpiar carpeta'}
         </button>
       </div>
     </article>

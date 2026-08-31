@@ -2,7 +2,7 @@
 
 ## FFprobe
 
-Clip Cache Inspector ejecuta una copia local de FFprobe distribuida mediante `@ffprobe-installer/ffprobe`. FFprobe forma parte del proyecto FFmpeg. El paquete binario Windows x64 utilizado por esta compilacion declara licencia GPL-3.0.
+Desofuscador Videos ejecuta una copia local de FFprobe distribuida mediante `@ffprobe-installer/ffprobe`. FFprobe forma parte del proyecto FFmpeg. El paquete binario Windows x64 utilizado por esta compilacion declara licencia GPL-3.0.
 
 - Proyecto: <https://ffmpeg.org/>
 - Codigo fuente: <https://github.com/FFmpeg/FFmpeg>

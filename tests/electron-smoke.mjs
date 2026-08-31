@@ -4,9 +4,10 @@ import { tmpdir } from 'node:os'
 import { _electron as electron } from 'playwright-core'
 
 const projectRoot = resolve(import.meta.dirname, '..')
-const temporaryDirectory = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-e2e-'))
+const temporaryDirectory = await mkdtemp(join(tmpdir(), 'desofuscador-videos-e2e-'))
 const localAppData = join(temporaryDirectory, 'local-app-data')
 const outputDirectory = join(temporaryDirectory, 'videos', 'Cortos')
+const alternateOutputDirectory = join(temporaryDirectory, 'salida-elegida')
 const filePath = join(
   localAppData,
   'CapCut',
@@ -55,12 +56,13 @@ try {
         window.inspector?.scan &&
         window.inspector?.deobfuscate &&
         window.inspector?.emptyFolder &&
+        window.inspector?.chooseOutputFolder &&
         window.inspector?.openOutputFolder
       )
     ))
   )
     throw new Error('El preload aislado no expuso la API')
-  await app.evaluate(({ dialog, ipcMain, shell }) => {
+  await app.evaluate(({ dialog, ipcMain, shell }, selectedOutput) => {
     shell.__clipCacheRevealedPaths = []
     shell.__clipCacheTrashedPaths = []
     shell.__clipCacheOpenedPaths = []
@@ -81,7 +83,8 @@ try {
       return { status: 'completed', outputPath: 'C:\\Videos\\Cortos\\corto-e2e.mp4' }
     })
     dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false })
-  })
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [selectedOutput] })
+  }, alternateOutputDirectory)
 
   await page.getByTestId('detected-file-name').filter({ hasText: 'efecto-control-e2e.mp4' }).waitFor()
   await page.getByText(outputDirectory).waitFor()
@@ -94,19 +97,23 @@ try {
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth
   )
   if (horizontalOverflow) throw new Error('La guia produce desborde horizontal en ancho compacto')
+  const actionRows = await page
+    .locator('.actions button')
+    .evaluateAll((buttons) => [...new Set(buttons.map((button) => Math.round(button.getBoundingClientRect().top)))])
+  if (actionRows.length !== 1) throw new Error('Los cinco botones de archivo no quedaron en una sola fila')
   await page.screenshot({ path: compactScreenshotPath, fullPage: true })
-  await page.getByRole('button', { name: 'Abrir carpeta' }).click()
+  await page.getByRole('button', { name: 'Abrir', exact: true }).click()
   await page.getByText('Carpeta abierta y archivo seleccionado').waitFor()
   const revealedPaths = await app.evaluate(({ shell }) => shell.__clipCacheRevealedPaths)
   if (!revealedPaths.includes(filePath)) throw new Error('No se revelo el MP4 exacto')
 
-  await page.getByRole('button', { name: 'Copiar ruta' }).click()
+  await page.getByRole('button', { name: 'Ruta' }).click()
   const copied = await app.evaluate(({ clipboard }) => clipboard.readText())
   if (copied !== filePath) throw new Error('No se copio la ruta exacta')
 
   await page.getByRole('textbox', { name: /nombre de salida/i }).fill('corto-e2e')
   await page.getByRole('button', { name: 'Desofuscar' }).click()
-  await page.getByText('Video guardado en Cortos y seleccionado en Explorer').waitFor()
+  await page.getByText('Video guardado en la carpeta de salida y seleccionado en Explorer').waitFor()
   const deobfuscations = await app.evaluate(({ shell }) => shell.__clipCacheDeobfuscations)
   if (
     deobfuscations.length !== 1 ||
@@ -116,12 +123,16 @@ try {
     throw new Error('El nombre opcional no llego al proceso principal')
   }
 
-  await page.getByRole('button', { name: 'Abrir Cortos' }).click()
-  await page.getByText('Carpeta Cortos abierta').waitFor()
-  const openedPaths = await app.evaluate(({ shell }) => shell.__clipCacheOpenedPaths)
-  if (!openedPaths.includes(outputDirectory)) throw new Error('No se abrio la carpeta Cortos configurada')
+  await page.getByRole('button', { name: 'Cambiar' }).click()
+  await page.getByText(alternateOutputDirectory).waitFor()
+  await page.getByText('Carpeta de salida actualizada').waitFor()
 
-  await page.getByRole('button', { name: 'Eliminar todo' }).click()
+  await page.getByRole('button', { name: 'Abrir salida' }).click()
+  await page.getByText('Carpeta de salida abierta').waitFor()
+  const openedPaths = await app.evaluate(({ shell }) => shell.__clipCacheOpenedPaths)
+  if (!openedPaths.includes(alternateOutputDirectory)) throw new Error('No se abrio la carpeta de salida elegida')
+
+  await page.getByRole('button', { name: 'Limpiar carpeta' }).click()
   await page.getByText('Eliminacion cancelada; no se movio ningun archivo').waitFor()
   await access(filePath)
   const trashedPaths = await app.evaluate(({ shell }) => shell.__clipCacheTrashedPaths)
@@ -133,11 +144,11 @@ try {
 
   const title = await page.title()
   const bounds = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.getBounds())
-  if (title !== 'Clip Cache Inspector' || !bounds || bounds.width < 840 || bounds.height < 620) {
+  if (title !== 'Desofuscador Videos' || !bounds || bounds.width < 840 || bounds.height < 620) {
     throw new Error('La ventana no conservo identidad o dimensiones minimas')
   }
   console.log(
-    `Electron smoke OK: nombre de salida, Abrir Cortos, revelado, copia, vacio y screenshot en ${screenshotPath}`
+    `Electron smoke OK: salida configurable, fila de acciones, revelado, copia, vacio y screenshot en ${screenshotPath}`
   )
 } finally {
   await app.close()

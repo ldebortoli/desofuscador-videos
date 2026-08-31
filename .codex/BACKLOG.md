@@ -8,6 +8,8 @@ No hay tareas en curso.
 
 # DONE
 
+- [2026-08-31] Entregar Desofuscador Videos 0.6.0: identidad y raiz local renombradas, cinco acciones en una fila, salida configurable/persistente con valor inicial `%USERPROFILE%\Videos\Cortos`, portable/acceso verificados y repositorio publico `desofuscador-videos` con CI, Secret Scanning y Push Protection.
+- [2026-08-31] Resolver el bloqueo anterior de Secret Scanning/Push Protection al convertir el repositorio en publico; ambas protecciones quedaron habilitadas y verificadas por API.
 - [2026-08-31] Entregar Clip Cache Inspector 0.5.0 con salida fija en `%USERPROFILE%\Videos\Cortos`, nombre de archivo opcional validado, sufijo anticolision y boton para abrir esa carpeta.
 - [2026-08-31] Entregar Clip Cache Inspector 0.4.0 con `Desofuscar` mediante el detector BDVE automatico y `Eliminar todo` para enviar a la Papelera solo el contenido de la carpeta CapCut detectada, conservando la carpeta y agregando validacion estricta, confirmacion y pruebas.
 - [2026-08-31] Corregir en 0.3.1 el diagnostico de recursos `isCryptorFile`: leer el indice local de CapCut, mostrar H.264/AAC y distinguirlos de un MP4 realmente incompleto.
@@ -20,4 +22,4 @@ No hay tareas en curso.
 
 # BLOCKED
 
-- [2026-08-29] [BLOCKED: GitHub API HTTP 422 `Secret scanning is not available for this repository`; el repositorio personal privado no admite Secret Scanning ni Push Protection con el plan/tipo actual.] Habilitar GitHub Secret Scanning y Push Protection. El escaneo local `npm run scan:secrets` queda activo.
+No hay tareas bloqueadas.

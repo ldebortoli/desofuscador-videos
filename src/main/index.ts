@@ -3,11 +3,11 @@ import { app, BrowserWindow, session, shell } from 'electron'
 import { electronApp, is } from '@electron-toolkit/utils'
 import { registerIpc } from './ipc'
 
-app.setName('Clip Cache Inspector')
+app.setName('Desofuscador Videos')
 if (process.env['CCI_E2E_USER_DATA_DIR']) app.setPath('userData', process.env['CCI_E2E_USER_DATA_DIR'])
 
 let mainWindow: BrowserWindow | null = null
-const appId = 'com.local.clipcacheinspector'
+const appId = 'com.local.desofuscadorvideos'
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) app.quit()
 
@@ -25,7 +25,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#120f0e',
-    title: 'Clip Cache Inspector',
+    title: 'Desofuscador Videos',
     icon: iconPath(),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

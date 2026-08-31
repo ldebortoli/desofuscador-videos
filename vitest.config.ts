@@ -22,6 +22,7 @@ export default defineConfig({
         'src/main/deobfuscator.ts',
         'src/main/folderCleanup.ts',
         'src/main/mediaAnalysis.ts',
+        'src/main/outputFolderSettings.ts',
         'src/renderer/src/format.ts'
       ],
       thresholds: {

@@ -12,6 +12,7 @@ import {
 } from './deobfuscator'
 import { resolveFfprobePath } from './ffprobeRunner'
 import { trashFolderContents } from './folderCleanup'
+import { OutputFolderSettings } from './outputFolderSettings'
 
 const safePath = (value: unknown): string => {
   if (typeof value !== 'string' || value.length < 1 || value.length > 32_767)
@@ -24,6 +25,7 @@ const channels = [
   'inspector:reveal',
   'inspector:copy-path',
   'inspector:get-output-folder',
+  'inspector:choose-output-folder',
   'inspector:open-output-folder',
   'inspector:deobfuscate',
   'inspector:empty-folder'
@@ -55,10 +57,6 @@ function powerShellPath(): string {
   return join(process.env['WINDIR'] ?? 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
 }
 
-function outputFolder(): string {
-  return resolveOutputFolder(app.getPath('home'), process.env['CCI_OUTPUT_DIRECTORY'])
-}
-
 async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path)
@@ -69,14 +67,18 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
-async function ensureOutputFolder(): Promise<string> {
-  const path = outputFolder()
+async function ensureOutputFolder(settings: OutputFolderSettings): Promise<string> {
+  const path = await settings.get()
   await mkdir(path, { recursive: true })
   return path
 }
 
 export function registerIpc(parentWindow: BrowserWindow): () => void {
   const inspector = new CapCutInspector(process.env['CCI_LOCAL_APP_DATA'] ?? process.env['LOCALAPPDATA'])
+  const outputSettings = new OutputFolderSettings(
+    join(app.getPath('userData'), 'output-settings.json'),
+    resolveOutputFolder(app.getPath('home'), process.env['CCI_OUTPUT_DIRECTORY'])
+  )
   let fileActionInProgress = false
   const deobfuscator = new BdveDeobfuscator({
     powerShellPath: powerShellPath(),
@@ -92,9 +94,29 @@ export function registerIpc(parentWindow: BrowserWindow): () => void {
   ipcMain.handle('inspector:copy-path', (_event, value: unknown) => {
     clipboard.writeText(safePath(value))
   })
-  ipcMain.handle('inspector:get-output-folder', () => outputFolder())
+  ipcMain.handle('inspector:get-output-folder', () => outputSettings.get())
+  ipcMain.handle('inspector:choose-output-folder', async () => {
+    if (fileActionInProgress || deobfuscator.isRunning) throw new Error('Ya hay una accion de archivo en curso')
+    fileActionInProgress = true
+    try {
+      const currentFolder = await outputSettings.get()
+      const selection = await dialog.showOpenDialog(parentWindow, {
+        title: 'Elegir carpeta de salida',
+        defaultPath: currentFolder,
+        buttonLabel: 'Usar esta carpeta',
+        properties: ['openDirectory', 'createDirectory']
+      })
+      const selectedFolder = selection.filePaths[0]
+      if (selection.canceled || !selectedFolder) {
+        return { status: 'cancelled' as const, folderPath: currentFolder }
+      }
+      return { status: 'completed' as const, folderPath: await outputSettings.set(selectedFolder) }
+    } finally {
+      fileActionInProgress = false
+    }
+  })
   ipcMain.handle('inspector:open-output-folder', async () => {
-    const error = await shell.openPath(await ensureOutputFolder())
+    const error = await shell.openPath(await ensureOutputFolder(outputSettings))
     if (error) throw new Error(error)
   })
   ipcMain.handle('inspector:deobfuscate', async (_event, value: unknown, requestedName: unknown) => {
@@ -102,7 +124,7 @@ export function registerIpc(parentWindow: BrowserWindow): () => void {
     fileActionInProgress = true
     try {
       const inputPath = await inspector.resolveRevealableFile(safePath(value))
-      const folderPath = await ensureOutputFolder()
+      const folderPath = await ensureOutputFolder(outputSettings)
       const fileName = normalizeOutputName(inputPath, requestedName)
       const outputPath = await nextAvailableOutputPath(folderPath, fileName, pathExists)
 
@@ -122,7 +144,7 @@ export function registerIpc(parentWindow: BrowserWindow): () => void {
       const preview = await readdir(folderPath)
       const confirmation = await dialog.showMessageBox(parentWindow, {
         type: 'warning',
-        title: 'Eliminar todo el contenido',
+        title: 'Limpiar el contenido de la carpeta',
         message: '¿Enviar todo el contenido de esta carpeta a la Papelera?',
         detail: `Carpeta exacta:\n${folderPath}\n\nSe enviaran ${preview.length} elementos a la Papelera. El archivo detectado y cualquier otro contenido de esta carpeta dejaran de estar disponibles para CapCut.`,
         buttons: ['Cancelar', 'Enviar todo a la Papelera'],
