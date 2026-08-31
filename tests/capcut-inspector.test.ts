@@ -3,8 +3,18 @@ import { mkdir, mkdtemp, realpath, rm, symlink, utimes, writeFile } from 'node:f
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { CapCutInspector, type InspectorDirectoryEntry, type InspectorFileSystem } from '../src/main/capcutInspector'
+import type { MediaAnalysis } from '../src/shared/types'
 
 const temporaryDirectories: string[] = []
+const unavailableMedia: MediaAnalysis = {
+  status: 'unavailable',
+  detail: 'Control de prueba.',
+  container: null,
+  durationSeconds: null,
+  bitRate: null,
+  video: null,
+  audio: null
+}
 
 afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map((path) => rm(path, { recursive: true, force: true })))
@@ -13,10 +23,14 @@ afterEach(async () => {
 async function makeInspector(): Promise<{ inspector: CapCutInspector; root: string }> {
   const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-'))
   temporaryDirectories.push(root)
-  return { inspector: new CapCutInspector(root), root }
+  return { inspector: new CapCutInspector(root, undefined, async () => unavailableMedia), root }
 }
 
-async function makeFile(path: string, content = 'video-control', modifiedAt = new Date()): Promise<void> {
+async function makeFile(
+  path: string,
+  content: string | Uint8Array = 'video-control',
+  modifiedAt = new Date()
+): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, content)
   await utimes(path, modifiedAt, modifiedAt)
@@ -158,12 +172,87 @@ describe('deteccion segura de archivos CapCut', () => {
       fileName: 'video-final.mp4',
       source: 'preset-combination',
       sourceLabel: 'Combinaciones preestablecidas',
-      size: 12
+      size: 12,
+      media: unavailableMedia
     })
     expect(result.locations.every((location) => location.available)).toBe(true)
     await expect(inspector.resolveRevealableFile(newest)).resolves.toBe(await realpath(newest))
     await expect(inspector.resolveRevealableFile(projectVideo)).resolves.toBe(await realpath(projectVideo))
     await expect(inspector.resolveRevealableFile(projectDecoy)).rejects.toThrow('ubicacion interna conocida')
+  })
+
+  test('analiza el archivo elegido con el ffprobe incluido', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-probe-'))
+    temporaryDirectories.push(root)
+    const inspector = new CapCutInspector(root)
+    const presetRoot = inspector.locations[1]
+    if (!presetRoot) throw new Error('Falta la ubicacion de presets')
+    await makeFile(join(presetRoot.path, 'cache-incompleto.mp4'), 'contenido no finalizado')
+
+    const result = await inspector.scan()
+
+    expect(result.file?.media).toMatchObject({ status: 'incomplete' })
+  })
+
+  test('usa el indice de CapCut cuando ffprobe no puede abrir un recurso protegido', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-index-'))
+    temporaryDirectories.push(root)
+    const inspector = new CapCutInspector(root)
+    const presetRoot = inspector.locations[1]
+    if (!presetRoot) throw new Error('Falta la ubicacion de presets')
+    const hash = '51fd486ce06f4055b949f4b19f65f3f4'
+    await makeFile(join(presetRoot.path, `${hash}.mp4`), 'contenido interno protegido')
+    await makeFile(
+      join(root, 'CapCut', 'User Data', 'Cache', 'importcache3', 'mediainfo', `${hash}.json`),
+      JSON.stringify({
+        steAVInfo: {
+          duration: 11_700_000,
+          isCryptorFile: 2,
+          sVideoStreamInfo: { codec_id: 27, nImageWidth: 1080, nImageHeight: 1920, sFrameRate: { num: 30, den: 1 } },
+          sAudioStreamInfo: [{ codec_id: 86018, nChannelCount: 2, nSampleRate: 44_100 }]
+        }
+      })
+    )
+
+    const result = await inspector.scan()
+
+    expect(result.file?.media).toMatchObject({
+      status: 'protected',
+      durationSeconds: 11.7,
+      video: { codecName: 'h264', width: 1080, height: 1920, frameRate: 30 },
+      audio: { codecName: 'aac', sampleRate: 44_100, channelLayout: 'stereo' }
+    })
+  })
+
+  test('conserva el resultado de ffprobe para un MP4 valido sin consultar el indice', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-valid-'))
+    temporaryDirectories.push(root)
+    const inspector = new CapCutInspector(root)
+    const presetRoot = inspector.locations[1]
+    if (!presetRoot) throw new Error('Falta la ubicacion de presets')
+    const minimalMp4 = Uint8Array.from([
+      0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 2, 0, 105, 115, 111, 109, 105, 115, 111, 50, 0, 0, 0,
+      8, 109, 111, 111, 118
+    ])
+    await makeFile(join(presetRoot.path, 'contenedor-vacio.mp4'), minimalMp4)
+
+    const result = await inspector.scan()
+
+    expect(result.file?.media).toMatchObject({ status: 'ready' })
+  })
+
+  test('ignora un indice presente que no contiene metadata multimedia', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'clip-cache-inspector-empty-index-'))
+    temporaryDirectories.push(root)
+    const inspector = new CapCutInspector(root)
+    const presetRoot = inspector.locations[1]
+    if (!presetRoot) throw new Error('Falta la ubicacion de presets')
+    await makeFile(join(presetRoot.path, 'sin-metadata.mp4'), 'contenido no finalizado')
+    await makeFile(join(root, 'CapCut', 'User Data', 'Cache', 'importcache3', 'mediainfo', 'sin-metadata.json'), '{}')
+
+    const result = await inspector.scan()
+
+    expect(result.file?.media).toMatchObject({ status: 'incomplete' })
   })
 
   test('rechaza rutas externas, alpha, extensiones, directorios y archivos borrados', async () => {

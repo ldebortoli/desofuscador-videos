@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  Activity,
   BookOpenCheck,
   Check,
   CircleAlert,
@@ -13,8 +14,8 @@ import {
   ShieldCheck,
   X
 } from 'lucide-react'
-import type { Mp4FileInfo, ScanResult } from '../../shared/types'
-import { formatBytes, formatDate } from './format'
+import type { MediaAnalysis, Mp4FileInfo, ScanResult } from '../../shared/types'
+import { formatBitRate, formatBytes, formatDate, formatDuration, formatFrameRate, formatSampleRate } from './format'
 
 interface ToastState {
   tone: 'success' | 'error'
@@ -304,6 +305,7 @@ function FileResult({
           <dd>{formatBytes(file.size)}</dd>
         </div>
       </dl>
+      <MediaAnalysisPanel analysis={file.media} />
       <div className="path-box">
         <span>RUTA COMPLETA</span>
         <code title={file.filePath}>{file.filePath}</code>
@@ -319,6 +321,121 @@ function FileResult({
         </button>
       </div>
     </article>
+  )
+}
+
+function codecLabel(codecName: string): string {
+  const labels: Record<string, string> = {
+    h264: 'H.264 / AVC',
+    hevc: 'H.265 / HEVC',
+    av1: 'AV1',
+    vp9: 'VP9',
+    aac: 'AAC',
+    opus: 'Opus',
+    mp3: 'MP3'
+  }
+  return labels[codecName.toLowerCase()] ?? codecName.toUpperCase()
+}
+
+function valueOrDash(value: string | null): string {
+  return value?.trim() || '—'
+}
+
+function MediaAnalysisPanel({ analysis }: { analysis: MediaAnalysis }): React.JSX.Element {
+  const video = analysis.video
+  const audio = analysis.audio
+  const bitRate = video?.bitRate ?? analysis.bitRate
+  const hasTechnicalData = analysis.status === 'ready' || analysis.status === 'protected'
+  const statusLabel =
+    analysis.status === 'ready'
+      ? 'Analizado'
+      : analysis.status === 'protected'
+        ? 'Interno CapCut'
+        : analysis.status === 'incomplete'
+          ? 'Incompleto'
+          : 'No disponible'
+
+  return (
+    <section className={`technical-panel technical-${analysis.status}`} aria-labelledby="technical-title">
+      <div className="technical-heading">
+        <span>
+          <Activity size={17} />
+        </span>
+        <div>
+          <small>LECTURA DEL ARCHIVO</small>
+          <h3 id="technical-title">Analisis tecnico</h3>
+        </div>
+        <strong data-testid="media-analysis-status">{statusLabel}</strong>
+      </div>
+
+      {hasTechnicalData ? (
+        <>
+          {analysis.status === 'protected' ? (
+            <div className="technical-message technical-note">
+              <CircleAlert size={18} />
+              <p>{analysis.detail}</p>
+            </div>
+          ) : null}
+          <dl className="technical-grid">
+            <TechnicalValue label="Codec de video" value={video ? codecLabel(video.codecName) : 'Sin pista'} />
+            <TechnicalValue
+              label="Perfil"
+              value={video ? valueOrDash(video.profile) : '—'}
+              title={video?.codecLongName ?? undefined}
+            />
+            <TechnicalValue
+              label="Resolucion"
+              value={video?.width && video.height ? `${video.width} x ${video.height}` : '—'}
+            />
+            <TechnicalValue label="Fotogramas" value={video?.frameRate ? formatFrameRate(video.frameRate) : '—'} />
+            <TechnicalValue
+              label="Duracion"
+              value={analysis.durationSeconds !== null ? formatDuration(analysis.durationSeconds) : '—'}
+            />
+            <TechnicalValue label="Bitrate" value={bitRate !== null ? formatBitRate(bitRate) : '—'} />
+            <TechnicalValue label="Formato de pixel" value={valueOrDash(video?.pixelFormat ?? null)} />
+            <TechnicalValue label="Contenedor" value={valueOrDash(analysis.container)} />
+            <TechnicalValue label="Codec de audio" value={audio ? codecLabel(audio.codecName) : 'Sin pista'} />
+            <TechnicalValue
+              label="Audio"
+              value={
+                audio
+                  ? [
+                      audio.sampleRate ? formatSampleRate(audio.sampleRate) : null,
+                      audio.channelLayout ?? (audio.channels ? `${audio.channels} canales` : null)
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || '—'
+                  : '—'
+              }
+              title={audio?.codecLongName ?? undefined}
+            />
+          </dl>
+        </>
+      ) : (
+        <div className="technical-message">
+          <CircleAlert size={18} />
+          <p>{analysis.detail}</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function TechnicalValue({
+  label,
+  value,
+  title
+}: {
+  label: string
+  value: string
+  title?: string | undefined
+}): React.JSX.Element {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd title={title}>{value}</dd>
+    </div>
   )
 }
 

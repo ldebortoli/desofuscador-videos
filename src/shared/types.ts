@@ -1,5 +1,38 @@
 export type Mp4Source = 'project-combination' | 'preset-combination' | 'motion-blur'
 
+export type MediaAnalysisStatus = 'ready' | 'protected' | 'incomplete' | 'unavailable'
+
+export interface VideoStreamInfo {
+  codecName: string
+  codecLongName: string | null
+  profile: string | null
+  width: number | null
+  height: number | null
+  frameRate: number | null
+  pixelFormat: string | null
+  bitRate: number | null
+}
+
+export interface AudioStreamInfo {
+  codecName: string
+  codecLongName: string | null
+  profile: string | null
+  sampleRate: number | null
+  channels: number | null
+  channelLayout: string | null
+  bitRate: number | null
+}
+
+export interface MediaAnalysis {
+  status: MediaAnalysisStatus
+  detail: string
+  container: string | null
+  durationSeconds: number | null
+  bitRate: number | null
+  video: VideoStreamInfo | null
+  audio: AudioStreamInfo | null
+}
+
 export interface Mp4FileInfo {
   fileName: string
   filePath: string
@@ -7,6 +40,7 @@ export interface Mp4FileInfo {
   sourceLabel: string
   modifiedAt: string
   size: number
+  media: MediaAnalysis
 }
 
 export interface SearchLocation {

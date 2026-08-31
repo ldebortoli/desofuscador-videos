@@ -56,6 +56,8 @@ try {
   })
 
   await page.getByTestId('detected-file-name').filter({ hasText: 'efecto-control-e2e.mp4' }).waitFor()
+  await page.getByTestId('media-analysis-status').filter({ hasText: 'Incompleto' }).waitFor()
+  await page.getByText(/estructura MP4 analizable|bloque moov/i).waitFor()
   await page.screenshot({ path: screenshotPath, fullPage: true })
   await page.setViewportSize({ width: 840, height: 620 })
   const horizontalOverflow = await page.evaluate(

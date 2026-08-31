@@ -57,3 +57,17 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-29.
 - Decision: desde 0.2.0 mostrar una guia breve basada en la ayuda oficial de CapCut para revisar, exportar como MP4/H.264 y abrir la carpeta final. Si hay recursos Pro, indicar alternativas gratuitas o licencia activa; no documentar el procedimiento de cache usado para evitar restricciones.
 - Motivo: resolver el olvido operativo del usuario sin convertir el inspector en una guia de evasion de licencia.
+
+## D-009 - Analisis multimedia local incluido
+
+- Estado: vigente.
+- Fecha: 2026-08-30.
+- Decision: desde 0.3.0 ejecutar un ffprobe Windows x64 incluido, oculto y con timeout para analizar solo el MP4 elegido. Mostrar metadata normalizada cuando exista y estados `incomplete` o `unavailable` sin exponer stderr ni inventar datos.
+- Motivo: permitir conocer como esta codificado cada archivo sin depender de instalaciones externas y diagnosticar correctamente caches sin bloque `moov`.
+
+## D-010 - Fallback al indice multimedia de CapCut
+
+- Estado: vigente; complementa D-009.
+- Fecha: 2026-08-31.
+- Decision: desde 0.3.1, cuando ffprobe no pueda abrir el recurso elegido, leer en modo solo lectura `Cache/importcache3/mediainfo/<hash>.json`. Si el indice marca `isCryptorFile`, mostrar la metadata normalizada con estado `protected`/`Interno CapCut`; no leer almacenes de claves, descifrar, convertir ni modificar el recurso.
+- Motivo: el archivo real observado conserva un `moov` pero usa la capa interna Cryptor de CapCut; clasificarlo como simplemente incompleto era engañoso, mientras que el indice local ya informa H.264, AAC, dimensiones, FPS y duracion.

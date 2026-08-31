@@ -1,6 +1,8 @@
-import { readdir, realpath, stat } from 'node:fs/promises'
+import { readFile, readdir, realpath, stat } from 'node:fs/promises'
 import { basename, extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
-import type { Mp4FileInfo, Mp4Source, ScanResult, SearchLocation } from '../shared/types'
+import type { MediaAnalysis, Mp4FileInfo, Mp4Source, ScanResult, SearchLocation } from '../shared/types'
+import { runFfprobe } from './ffprobeRunner'
+import { analyzeMedia, parseCapCutMediaInfo } from './mediaAnalysis'
 
 export interface InspectorDirectoryEntry {
   name: string
@@ -38,6 +40,8 @@ interface ScannedLocation {
   files: Mp4FileInfo[]
 }
 
+export type MediaAnalyzer = (filePath: string) => Promise<MediaAnalysis>
+
 function errorCode(reason: unknown): string {
   return reason && typeof reason === 'object' && 'code' in reason ? String(reason.code) : ''
 }
@@ -66,28 +70,32 @@ function isInside(candidate: string, root: string): boolean {
 
 export class CapCutInspector {
   readonly locations: LocationDefinition[]
+  private readonly mediaAnalyzer: MediaAnalyzer
+  private readonly userData: string
 
   constructor(
     localAppData = process.env['LOCALAPPDATA'] ?? '',
-    private readonly fileSystem: InspectorFileSystem = nodeFileSystem
+    private readonly fileSystem: InspectorFileSystem = nodeFileSystem,
+    mediaAnalyzer?: MediaAnalyzer
   ) {
     if (!localAppData.trim()) throw new Error('Windows no informo la carpeta LOCALAPPDATA')
-    const userData = join(resolve(localAppData), 'CapCut', 'User Data')
+    this.userData = join(resolve(localAppData), 'CapCut', 'User Data')
+    this.mediaAnalyzer = mediaAnalyzer ?? ((filePath): Promise<MediaAnalysis> => this.analyzeLocalMedia(filePath))
     this.locations = [
       {
         source: 'project-combination',
         label: 'Recursos del proyecto',
-        path: join(userData, 'Projects', 'com.lveditor.draft')
+        path: join(this.userData, 'Projects', 'com.lveditor.draft')
       },
       {
         source: 'preset-combination',
         label: 'Combinaciones preestablecidas',
-        path: join(userData, 'Presets', 'Combination', 'Resources')
+        path: join(this.userData, 'Presets', 'Combination', 'Resources')
       },
       {
         source: 'motion-blur',
         label: 'Cache de desenfoque de movimiento',
-        path: join(userData, 'Cache', 'MotionBlurCache')
+        path: join(this.userData, 'Cache', 'MotionBlurCache')
       }
     ]
   }
@@ -97,8 +105,9 @@ export class CapCutInspector {
     const files = scanned
       .flatMap((entry) => entry.files)
       .sort((left, right) => new Date(right.modifiedAt).getTime() - new Date(left.modifiedAt).getTime())
+    const newest = files[0]
     return {
-      file: files[0] ?? null,
+      file: newest ? { ...newest, media: await this.mediaAnalyzer(newest.filePath) } : null,
       locations: scanned.map((entry) => entry.location)
     }
   }
@@ -131,6 +140,20 @@ export class CapCutInspector {
     }
 
     throw new Error('El archivo no pertenece a una ubicacion interna conocida de CapCut')
+  }
+
+  private async analyzeLocalMedia(filePath: string): Promise<MediaAnalysis> {
+    const probed = await analyzeMedia(filePath, runFfprobe)
+    if (probed.status === 'ready') return probed
+
+    const cacheName = `${basename(filePath, extname(filePath))}.json`
+    const cachePath = join(this.userData, 'Cache', 'importcache3', 'mediainfo', cacheName)
+    try {
+      const cached = parseCapCutMediaInfo(await readFile(cachePath, 'utf8'))
+      return cached ?? probed
+    } catch {
+      return probed
+    }
   }
 
   private async scanLocation(definition: LocationDefinition): Promise<ScannedLocation> {
@@ -177,7 +200,16 @@ export class CapCutInspector {
             source: definition.source,
             sourceLabel: definition.label,
             modifiedAt: details.mtime.toISOString(),
-            size: details.size
+            size: details.size,
+            media: {
+              status: 'unavailable',
+              detail: 'Analisis pendiente.',
+              container: null,
+              durationSeconds: null,
+              bitRate: null,
+              video: null,
+              audio: null
+            }
           })
         } catch (reason) {
           if (!isMissingPath(reason)) throw reason

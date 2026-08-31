@@ -1,6 +1,6 @@
 {
   "name": "clip-cache-inspector",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "Aplicacion Windows de solo lectura para localizar MP4 internos de CapCut",
   "main": "./out/main/index.js",
   "author": "Lucas De Bortoli",
@@ -27,6 +27,7 @@
     "install:shortcut": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Install-WindowsShortcut.ps1"
   },
   "dependencies": {
+    "@ffprobe-installer/ffprobe": "2.1.2",
     "lucide-react": "1.31.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -60,12 +61,16 @@
     "appId": "com.local.clipcacheinspector",
     "productName": "Clip Cache Inspector",
     "asar": true,
+    "asarUnpack": [
+      "node_modules/@ffprobe-installer/win32-x64/ffprobe.exe"
+    ],
     "directories": {
       "output": "release"
     },
     "files": [
       "out/**/*",
       "build/icon.ico",
+      "THIRD_PARTY_NOTICES.md",
       "package.json"
     ],
     "win": {

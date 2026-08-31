@@ -15,7 +15,33 @@ const populated: ScanResult = {
     source: 'preset-combination',
     sourceLabel: 'Combinaciones preestablecidas',
     modifiedAt: '2026-08-29T13:00:00.000Z',
-    size: 2_621_440
+    size: 2_621_440,
+    media: {
+      status: 'ready',
+      detail: 'Analisis multimedia completado.',
+      container: 'QuickTime / MOV',
+      durationSeconds: 62.4,
+      bitRate: 8_250_000,
+      video: {
+        codecName: 'h264',
+        codecLongName: 'H.264 / AVC / MPEG-4 AVC',
+        profile: 'High',
+        width: 1920,
+        height: 1080,
+        frameRate: 29.97,
+        pixelFormat: 'yuv420p',
+        bitRate: 8_000_000
+      },
+      audio: {
+        codecName: 'aac',
+        codecLongName: 'AAC (Advanced Audio Coding)',
+        profile: 'LC',
+        sampleRate: 48_000,
+        channels: 2,
+        channelLayout: 'stereo',
+        bitRate: 250_000
+      }
+    }
   },
   locations: [
     { source: 'project-combination', label: 'Recursos del proyecto', path: 'C:\\CapCut\\Projects', available: true },
@@ -57,6 +83,14 @@ describe('interfaz principal', () => {
     expect(await screen.findByTestId('detected-file-name')).toHaveTextContent('efecto-detectado.mp4')
     expect(screen.getAllByText('Combinaciones preestablecidas')).toHaveLength(2)
     expect(screen.getByText('2.5 MB')).toBeInTheDocument()
+    expect(screen.getByTestId('media-analysis-status')).toHaveTextContent('Analizado')
+    expect(screen.getByText('H.264 / AVC')).toBeInTheDocument()
+    expect(screen.getByText('1920 x 1080')).toBeInTheDocument()
+    expect(screen.getByText('29.97 FPS')).toBeInTheDocument()
+    expect(screen.getByText('1:02')).toBeInTheDocument()
+    expect(screen.getByText('8 Mb/s')).toBeInTheDocument()
+    expect(screen.getByText('AAC')).toBeInTheDocument()
+    expect(screen.getByText('48 kHz · stereo')).toBeInTheDocument()
     expect(screen.getAllByText('Disponible')).toHaveLength(2)
     expect(screen.getByText('No encontrada')).toBeInTheDocument()
   })
@@ -82,6 +116,57 @@ describe('interfaz principal', () => {
     expect(await screen.findByRole('heading', { name: 'Todavia no aparece ningun MP4' })).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Buscar de nuevo' })[0]!)
     await waitFor(() => expect(scan).toHaveBeenCalledTimes(2))
+  })
+
+  test('explica cuando el MP4 interno esta incompleto', async () => {
+    scan.mockResolvedValue({
+      ...populated,
+      file: populated.file
+        ? {
+            ...populated.file,
+            media: {
+              status: 'incomplete',
+              detail: 'MP4 interno incompleto: falta el bloque moov.',
+              container: null,
+              durationSeconds: null,
+              bitRate: null,
+              video: null,
+              audio: null
+            }
+          }
+        : null
+    })
+    render(<App />)
+
+    expect(await screen.findByTestId('media-analysis-status')).toHaveTextContent('Incompleto')
+    expect(screen.getByText(/falta el bloque moov/i)).toBeInTheDocument()
+  })
+
+  test('muestra metadata recuperada del indice para un recurso interno de CapCut', async () => {
+    scan.mockResolvedValue({
+      ...populated,
+      file: populated.file
+        ? {
+            ...populated.file,
+            media: {
+              ...populated.file.media,
+              status: 'protected',
+              detail: 'Metadatos leidos del indice local de CapCut. Es un recurso interno protegido.',
+              container: 'MP4 (indice de CapCut)',
+              durationSeconds: 11.7,
+              video: populated.file.media.video
+                ? { ...populated.file.media.video, width: 1080, height: 1920, frameRate: 30 }
+                : null
+            }
+          }
+        : null
+    })
+    render(<App />)
+
+    expect(await screen.findByTestId('media-analysis-status')).toHaveTextContent('Interno CapCut')
+    expect(screen.getByText(/recurso interno protegido/i)).toBeInTheDocument()
+    expect(screen.getByText('1080 x 1920')).toBeInTheDocument()
+    expect(screen.getByText('30 FPS')).toBeInTheDocument()
   })
 
   test('permite reintentar un error de busqueda', async () => {

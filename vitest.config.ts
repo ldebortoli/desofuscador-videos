@@ -17,7 +17,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
-      include: ['src/main/capcutInspector.ts', 'src/renderer/src/format.ts'],
+      include: ['src/main/capcutInspector.ts', 'src/main/mediaAnalysis.ts', 'src/renderer/src/format.ts'],
       thresholds: {
         lines: 100,
         functions: 100,
