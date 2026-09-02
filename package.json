@@ -1,6 +1,6 @@
 {
   "name": "desofuscador-videos",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Aplicacion Windows para localizar, analizar y recuperar MP4 internos de CapCut",
   "main": "./out/main/index.js",
   "author": "Lucas De Bortoli",
@@ -68,6 +68,14 @@
       {
         "from": "resources/Desofuscar-Video.ps1",
         "to": "tools/Desofuscar-Video.ps1"
+      },
+      {
+        "from": "resources/BdveMp4Index.cs",
+        "to": "tools/BdveMp4Index.cs"
+      },
+      {
+        "from": "resources/BdvePattern.cs",
+        "to": "tools/BdvePattern.cs"
       }
     ],
     "directories": {

@@ -77,6 +77,13 @@ describe('ejecucion del detector BDVE', () => {
 
   test('extrae un error util de stderr, stdout o del proceso', () => {
     const failure = new Error('exit 1')
+    expect(
+      deobfuscationError(
+        failure,
+        'Detectando...',
+        'detalle de PowerShell\nBDVE_ERROR: El indice no es compatible. El original no se modifico.\n'
+      )
+    ).toHaveProperty('message', 'El indice no es compatible. El original no se modifico.')
     expect(deobfuscationError(failure, 'otra salida', 'At script.ps1:1\nNo se encontro CapCut')).toHaveProperty(
       'message',
       'No se encontro CapCut'

@@ -6,6 +6,10 @@ const currentVersion = String(packageJson.version ?? '')
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(currentVersion)) {
   throw new Error('package.json debe declarar una version SemVer valida')
 }
+const lock = JSON.parse(await readFile(new URL('../package-lock.json', import.meta.url), 'utf8'))
+if (lock.version !== currentVersion || lock.packages[''].version !== currentVersion) {
+  throw new Error('package-lock.json debe coincidir con la version de package.json')
+}
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
 const canResolve = (reference) => {
@@ -17,7 +21,11 @@ const canResolve = (reference) => {
   }
 }
 const productPath = (path) =>
-  path === 'package.json' || path === 'electron.vite.config.ts' || path.startsWith('src/') || path.startsWith('build/')
+  path === 'package.json' ||
+  path === 'electron.vite.config.ts' ||
+  path.startsWith('src/') ||
+  path.startsWith('build/') ||
+  path.startsWith('resources/')
 
 let base = null
 let changed = []

@@ -6,7 +6,22 @@ Entregar una aplicacion Windows independiente para detectar el MP4 interno mas r
 
 ## Tarea actual
 
-No hay implementacion activa. El run fallido `33401317136` no fue cuota ni timeout: el checkout Windows con CRLF hizo que Prettier marcara 42 archivos. `.gitattributes` fijo LF, el checkout representativo local paso y el run de reemplazo `33404655940` termino completo en verde. Las acciones oficiales quedaron actualizadas a v7 para eliminar la advertencia del runtime Node.js antiguo.
+Correccion 0.6.1 implementada, validada, empaquetada y acceso actualizado. La entrega se publica en origin/main; no monitorear CI en este pedido. Verificacion visual final del acceso bloqueada por interrupcion del usuario de Computer Use; no retomar inputs en este turno.
+
+Resuelto el caso de la captura: el audio tenia parte del indice XOR y los paquetes HEVC saltaban varios ciclos. El fallback lee tablas de video intactas; el detector usa residuos de posiciones sin asumir ciclos consecutivos. Solo acepta la configuracion verificada por SHA-256 y conserva todas las pistas en el remux final.
+
+## Validacion 0.6.1
+
+- Quality completo; auditoria runtime sin vulnerabilidades. 54/54 pruebas y 126 comprobaciones nativas sobre MP4 sinteticos, sin contenido personal ni dependencia de CapCut en CI.
+- Cobertura V8 TypeScript: 100% sentencias 270/270, ramas 239/239, funciones 68/68, lineas 228/228; umbrales 100%. No atribuir esa cobertura a C#/PowerShell.
+- E2E Electron de desarrollo y win-unpacked correctos, incluido error IPC legible y reintento. Captura `.codex/qa-actions.png` revisada.
+- Recurso HEVC: `9dd88057da9b3602a15d89b0abd06e65.mp4`; SHA-256 original antes/despues EA8ED4DC2F3653BC803F4D270A7BA38BA9854BDBE2169ABD75D96CEB5E2503DE.
+- Parametros: clave 0x6e, periodo 23747 y longitud 8656. Salida `%USERPROFILE%/Videos/Cortos/9dd88057da9b3602a15d89b0abd06e65_desofuscado.mp4`: 28323039 bytes, SHA-256 D5ED68CEA7FA95D8BADCD8CEEAFFD33761EDB94051426C9E4F676A26BC5937E7.
+- Verificados 817 cuadros HEVC 1080x1920, 27.233333 s y AAC 27.237007 s. Decodificacion completa sin errores. El script empaquetado repitio la recuperacion completa con todos sus auxiliares.
+- Regresion real H.264 anterior correcta: clave 0x96, periodo 613289, longitud 141443 y decodificacion completa.
+- `package.json` y lock sincronizados en 0.6.1; version gate incluye resources/ y verifica lock. Secret Scanning y Push Protection habilitados y verificados nuevamente.
+- Computer Use: captura nativa fallo en septiembre 2026 con `SetIsBorderRequired / Interfaz no compatible (0x80004002)`. No repetir durante este run; usar capturas Electron. Accesibilidad funciono y Alt+F4 cerro la app anterior sin tocar CapCut.
+- El usuario detuvo Computer Use con Escape durante la verificacion final. No emitir mas inputs ni lanzar ventanas en este turno. Lanzamiento final del acceso e identidad visual de la nueva version pendientes por esa interrupcion; E2E del paquete si esta validado.
 
 ## Estado actual
 
@@ -27,21 +42,22 @@ No hay implementacion activa. El run fallido `33401317136` no fue cuota ni timeo
 - Desde 0.6.0, la salida inicial es `%USERPROFILE%\Videos\Cortos`, pero `Cambiar` abre un selector nativo y persiste una ruta absoluta en `output-settings.json` dentro de los datos locales de la app. `Abrir salida` y `Desofuscar` usan siempre la preferencia vigente.
 - Las acciones visibles son `Abrir`, `Ruta`, `Abrir salida`, `Desofuscar` y `Limpiar carpeta`; una prueba E2E confirma que ocupan una sola fila a 840 px. `Limpiar carpeta` conserva la confirmacion nativa, la Papelera y la carpeta contenedora.
 - El detector empaquetado se probo contra el recurso real: clave `0x96`, periodo 613.289, longitud XOR 141.443, H.264 1080x1920 de 351 cuadros + AAC, 11,702993 s, decodificacion completa y salida temporal eliminada.
-- Validacion 0.6.0: quality completo, escaneo de 58 archivos, audit runtime con 0 vulnerabilidades, 51/51 pruebas y cobertura 100% en lineas, ramas, funciones y sentencias.
+- Validacion actual 0.6.1 detallada arriba; quality completo y escaneo de 65 archivos sin hallazgos.
 - E2E Electron paso en desarrollo y contra `release/win-unpacked`: verifico selector/persistencia de salida, fila unica, nombre opcional, revelado, copia y cancelacion del vaciado; la vista compacta no desborda horizontalmente.
 - El paquete real valido el hash observado con estado `Interno CapCut` y metadata H.264/AAC; captura revisada en `.codex/qa-actual-media.png`.
-- Portable: `release/Desofuscador-Videos-0.6.0-x64.exe`, 111.093.278 bytes, SHA-256 `00F5C58331A11738FA402A248B0386CAA6440796FD2403F6F4688431F820F4A4`.
-- Acceso real: `%USERPROFILE%\Documents\Codex\CODEX APPS\Desofuscador Videos.lnk`; target e icono apuntan al portable 0.6.0 y el acceso anterior fue retirado. El lanzamiento real mostro una sola ventana, AppUserModelID `com.local.desofuscadorvideos`, icono nativo de clase y 0 procesos residuales despues del cierre.
+- Portable: `release/Desofuscador-Videos-0.6.1-x64.exe`, 111093673 bytes, ProductVersion 0.6.1, SHA-256 `EFD40CAEE6BBD99A7667EC2B84F9CA69536127C14AB0DCE07722B260E5E72D7F`.
+- Acceso real: `%USERPROFILE%\Documents\Codex\CODEX APPS\Desofuscador Videos.lnk`; target e icono apuntan al portable 0.6.1 y fueron verificados. AppUserModelID estable `com.local.desofuscadorvideos`. No se relanzo tras Escape. Las dos copias temporales de regresion se retiraron despues de verificar sus hashes; se conserva la salida de Cortos.
 - CI: `Calidad` corre en push/PR; `E2E y portable de Windows` es manual, con timeout, cache, concurrencia cancelable y retencion de tres dias. No monitorear CI tras el push salvo pedido explicito.
 
 ## Proximos pasos
 
-1. Mantener 0.6.0 sin cambios hasta una proxima modificacion ejecutable; entonces incrementar SemVer.
+1. Ante una nueva solicitud, verificar lanzamiento final del acceso 0.6.1 con permiso para retomar control de ventanas. No repetir la captura Windows incompatible durante el run.
 2. Si CapCut cambia rutas internas, actualizar las definiciones centralizadas y sus pruebas.
 
 ## Riesgos
 
 - CapCut puede cambiar sus rutas internas; mantener las tres raices centralizadas y cubiertas por pruebas.
 - BDVE puede cambiar de version o tipo; las variantes distintas de version 1 / XOR tipo 3 se rechazan sin tocar el original.
+- 0.6.1 necesita al menos una pista de video intacta y compatible para su fallback. Limites: 64 MiB de moov, un millon de muestras por pista, 20 millones de bytes de periodo, 200 millones de observaciones y 20 millones de candidatos SHA-256. Otras variantes se rechazan sin tocar el original.
 - `Limpiar carpeta` vacia todos los hijos de la carpeta confirmada; mantener siempre la ruta exacta, Cancelar predeterminado, Papelera y la prueba que demuestra que la carpeta contenedora persiste.
 - La utilidad no debe evolucionar hacia automatizacion de licencias.

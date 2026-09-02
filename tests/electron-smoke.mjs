@@ -112,6 +112,23 @@ try {
   if (copied !== filePath) throw new Error('No se copio la ruta exacta')
 
   await page.getByRole('textbox', { name: /nombre de salida/i }).fill('corto-e2e')
+  await app.evaluate(({ ipcMain }) => {
+    ipcMain.removeHandler('inspector:deobfuscate')
+    ipcMain.handle('inspector:deobfuscate', async () => {
+      throw new Error('No se pudo analizar el indice MP4. El original no se modifico.')
+    })
+  })
+  await page.getByRole('button', { name: 'Desofuscar' }).click()
+  await page.getByText('No se pudo analizar el indice MP4. El original no se modifico.', { exact: true }).waitFor()
+  if (await page.getByText(/Error invoking remote method/).count())
+    throw new Error('La UI expuso el error interno de IPC')
+  await app.evaluate(({ ipcMain, shell }) => {
+    ipcMain.removeHandler('inspector:deobfuscate')
+    ipcMain.handle('inspector:deobfuscate', async (_event, path, outputName) => {
+      shell.__clipCacheDeobfuscations.push({ path, outputName })
+      return { status: 'completed', outputPath: 'C:\\Videos\\Cortos\\corto-e2e.mp4' }
+    })
+  })
   await page.getByRole('button', { name: 'Desofuscar' }).click()
   await page.getByText('Video guardado en la carpeta de salida y seleccionado en Explorer').waitFor()
   const deobfuscations = await app.evaluate(({ shell }) => shell.__clipCacheDeobfuscations)

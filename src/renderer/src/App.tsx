@@ -18,7 +18,15 @@ import {
   X
 } from 'lucide-react'
 import type { MediaAnalysis, Mp4FileInfo, ScanResult } from '../../shared/types'
-import { formatBitRate, formatBytes, formatDate, formatDuration, formatFrameRate, formatSampleRate } from './format'
+import {
+  formatActionError,
+  formatBitRate,
+  formatBytes,
+  formatDate,
+  formatDuration,
+  formatFrameRate,
+  formatSampleRate
+} from './format'
 
 interface ToastState {
   tone: 'success' | 'error'
@@ -113,7 +121,7 @@ export default function App(): React.JSX.Element {
           : { tone: 'success', text: 'Desofuscacion cancelada; no se hicieron cambios' }
       )
     } catch (reason) {
-      setToast({ tone: 'error', text: reason instanceof Error ? reason.message : 'No se pudo desofuscar el video' })
+      setToast({ tone: 'error', text: formatActionError(reason, 'No se pudo desofuscar el video') })
     } finally {
       setDeobfuscating(false)
     }

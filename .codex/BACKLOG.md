@@ -8,6 +8,8 @@ No hay tareas en curso.
 
 # DONE
 
+- [2026-09-02] Entregar 0.6.1: lector de tablas de video intactas para indices parcialmente ofuscados, deteccion compatible con ciclos omitidos, errores claros, 54 pruebas/100% cobertura TypeScript y 126 comprobaciones nativas, regresiones reales HEVC/H.264 y E2E de desarrollo/paquete correctos. Portable y acceso actualizados; copia recuperada con audio en Cortos y original intacto.
+- [2026-09-02] Diagnosticar el fallo de lectura de muestras en un recurso HEVC: la copia de analisis restaura solo el prefijo anterior a `mdat`, pero parte del `moov` final sigue ofuscada y ffprobe rechaza STSC/STCO. Se verificaron palabras y cabeceras XOR en memoria, sin modificar el original ni implementar cambios funcionales.
 - [2026-08-31] Corregir el CI publico: normalizar archivos de texto a LF con `.gitattributes`, reproducir un checkout Windows con `core.autocrlf=true` y confirmar el run `33404655940` completo en verde. Actualizar ademas las acciones oficiales a v7 para retirar la advertencia del runtime Node.js obsoleto.
 - [2026-08-31] Entregar Desofuscador Videos 0.6.0: identidad y raiz local renombradas, cinco acciones en una fila, salida configurable/persistente con valor inicial `%USERPROFILE%\Videos\Cortos`, portable/acceso verificados y repositorio publico `desofuscador-videos` con CI, Secret Scanning y Push Protection.
 - [2026-08-31] Resolver el bloqueo anterior de Secret Scanning/Push Protection al convertir el repositorio en publico; ambas protecciones quedaron habilitadas y verificadas por API.
@@ -23,4 +25,4 @@ No hay tareas en curso.
 
 # BLOCKED
 
-No hay tareas bloqueadas.
+- [P2] [BLOCKED: el usuario detuvo Computer Use con Escape; no retomar inputs en este turno] Verificacion visual del lanzamiento final del acceso 0.6.1 e identidad de ventana/taskbar. Propiedades de target/icono verificadas y E2E del paquete aprobado. Captura nativa ademas incompatible (0x80004002); usar Electron para capturas.

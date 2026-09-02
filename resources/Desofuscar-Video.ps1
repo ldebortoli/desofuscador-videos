@@ -4,9 +4,9 @@ Recupera MP4 de CapCut con firma BDVE version 1 y ofuscacion XOR tipo 3.
 
 .DESCRIPTION
 Detecta la clave comparando la cabecera cifrada con la caja MP4 obligatoria
-"ftyp". Restaura temporalmente solo la cabecera, usa ffprobe para localizar
-los paquetes H.264/H.265/AAC y observa sus cambios entre claro y XOR. Con esas
-transiciones acota el periodo y la longitud cifrada, y acepta los parametros
+"ftyp". Usa ffprobe o las tablas de video intactas para localizar los paquetes.
+Admite indices parcialmente ofuscados y saltos de varios bloques entre muestras.
+Acota el periodo y la longitud con los estados claro/XOR, y acepta los parametros
 solo si SHA-256(periodo_be + longitud_be + clave) coincide con la huella crpt
 guardada en la caja bdve. Finalmente usa el descifrador local de CapCut, copia
 los streams sin recodificarlos y decodifica la salida completa como validacion.
@@ -32,6 +32,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+trap {
+    [Console]::Error.WriteLine('BDVE_ERROR: ' + ($_.Exception.Message -replace '[\r\n]+', ' '))
+    exit 1
+}
 
 function Read-UInt32BigEndian {
     param(
@@ -319,92 +324,6 @@ function Get-PacketState {
     return '?'
 }
 
-function Initialize-RecoveryType {
-    if ('BdveParameterRecovery' -as [type]) {
-        return
-    }
-
-    Add-Type -TypeDefinition @'
-using System;
-using System.Security.Cryptography;
-
-public static class BdveParameterRecovery
-{
-    public static int[] Recover(
-        byte[] targetHash,
-        byte key,
-        int stepMinimum,
-        int stepMaximum,
-        long[] encryptedEndLowerBounds,
-        long[] encryptedEndUpperBounds,
-        long maximumCandidates)
-    {
-        if (targetHash == null || targetHash.Length != 32)
-            throw new ArgumentException("The BDVE hash must contain 32 bytes.");
-        if (encryptedEndLowerBounds == null || encryptedEndUpperBounds == null ||
-            encryptedEndLowerBounds.Length != encryptedEndUpperBounds.Length)
-            throw new ArgumentException("Invalid encrypted-end bounds.");
-
-        byte[] configuration = new byte[9];
-        configuration[8] = key;
-        long tested = 0;
-
-        using (SHA256 sha = SHA256.Create())
-        {
-            for (int step = stepMinimum; step <= stepMaximum; step++)
-            {
-                long lengthMinimum = 1;
-                long lengthMaximum = step - 1L;
-
-                for (int interval = 0; interval < encryptedEndLowerBounds.Length; interval++)
-                {
-                    long lower = (long)encryptedEndLowerBounds[interval] - ((long)interval * step) + 1L;
-                    long upper = (long)encryptedEndUpperBounds[interval] - ((long)interval * step);
-                    if (lower > lengthMinimum) lengthMinimum = lower;
-                    if (upper < lengthMaximum) lengthMaximum = upper;
-                }
-                if (lengthMinimum > lengthMaximum || lengthMaximum > Int32.MaxValue)
-                    continue;
-
-                configuration[0] = (byte)(step >> 24);
-                configuration[1] = (byte)(step >> 16);
-                configuration[2] = (byte)(step >> 8);
-                configuration[3] = (byte)step;
-
-                for (int length = (int)Math.Max(1L, lengthMinimum);
-                     length <= (int)lengthMaximum;
-                     length++)
-                {
-                    tested++;
-                    if (tested > maximumCandidates)
-                        throw new InvalidOperationException("The automatic parameter search is too broad.");
-
-                    configuration[4] = (byte)(length >> 24);
-                    configuration[5] = (byte)(length >> 16);
-                    configuration[6] = (byte)(length >> 8);
-                    configuration[7] = (byte)length;
-
-                    byte[] digest = sha.ComputeHash(configuration);
-                    bool equal = true;
-                    for (int index = 0; index < digest.Length; index++)
-                    {
-                        if (digest[index] != targetHash[index])
-                        {
-                            equal = false;
-                            break;
-                        }
-                    }
-                    if (equal)
-                        return new int[] { step, length, (int)tested };
-                }
-            }
-        }
-        return new int[0];
-    }
-}
-'@
-}
-
 function Find-BdveParameters {
     param(
         [Parameter(Mandatory)][string]$Path,
@@ -447,9 +366,18 @@ function Find-BdveParameters {
         $TemporaryProbePath
     )
     if ($probeResult.ExitCode -ne 0) {
-        throw "ffprobe no pudo leer la tabla de muestras:`n$($probeResult.Output -join [Environment]::NewLine)"
+        Write-Host 'El indice esta parcialmente ofuscado; analizando las tablas de video intactas...'
+        try {
+            if (-not ('BdveMp4Index' -as [type])) {
+                Add-Type -Path (Join-Path $PSScriptRoot 'BdveMp4Index.cs')
+            }
+            $probe = [BdveMp4Index]::Read($Path, $Key)
+        } catch {
+            throw 'No se pudo analizar el indice MP4: no quedan tablas de video compatibles e intactas para detectar el patron. El original no se modifico.'
+        }
+    } else {
+        $probe = ($probeResult.Output -join [Environment]::NewLine) | ConvertFrom-Json
     }
-    $probe = ($probeResult.Output -join [Environment]::NewLine) | ConvertFrom-Json
     if (-not $probe.streams -or -not $probe.packets) {
         throw 'ffprobe no encontro streams o paquetes en el MP4.'
     }
@@ -504,66 +432,14 @@ function Find-BdveParameters {
     if ($orderedStates.Count -lt 20) {
         throw 'No hubo suficientes paquetes H.264/H.265/AAC clasificables para detectar el patron.'
     }
-    if ($orderedStates[0].State -ne 'E') {
-        throw 'El primer bloque multimedia clasificable no aparece cifrado como espera BDVE tipo 3.'
+    if (-not ('BdvePattern' -as [type])) {
+        Add-Type -Path (Join-Path $PSScriptRoot 'BdvePattern.cs')
     }
-
-    $plainToEncrypted = [Collections.Generic.List[object]]::new()
-    $encryptedToPlain = [Collections.Generic.List[object]]::new()
-    for ($index = 1; $index -lt $orderedStates.Count; $index++) {
-        $previous = $orderedStates[$index - 1]
-        $current = $orderedStates[$index]
-        if ($previous.State -eq 'P' -and $current.State -eq 'E') {
-            $plainToEncrypted.Add([pscustomobject]@{
-                Lower = [long]$previous.Position
-                Upper = [long]$current.Position
-            })
-        } elseif ($previous.State -eq 'E' -and $current.State -eq 'P') {
-            $encryptedToPlain.Add([pscustomobject]@{
-                Lower = [long]$previous.Position
-                Upper = [long]$current.Position
-            })
-        }
-    }
-
-    if ($plainToEncrypted.Count -lt 2 -or $encryptedToPlain.Count -lt 3) {
-        throw 'El video es demasiado corto o no contiene suficientes alternancias para recuperar los parametros.'
-    }
-    if ($encryptedToPlain.Count -lt $plainToEncrypted.Count -or
-        $encryptedToPlain.Count -gt ($plainToEncrypted.Count + 1)) {
-        throw 'Las transiciones detectadas no forman un patron periodico BDVE confiable.'
-    }
-
-    [long]$stepMinimum = 1
-    [long]$stepMaximum = [int]::MaxValue
-    for ($index = 0; $index -lt $plainToEncrypted.Count; $index++) {
-        [long]$intervalNumber = $index + 1
-        [long]$minimumForTransition = [Math]::Floor($plainToEncrypted[$index].Lower / $intervalNumber) + 1
-        [long]$maximumForTransition = [Math]::Floor($plainToEncrypted[$index].Upper / $intervalNumber)
-        $stepMinimum = [Math]::Max($stepMinimum, $minimumForTransition)
-        $stepMaximum = [Math]::Min($stepMaximum, $maximumForTransition)
-    }
-
-    if ($stepMinimum -gt $stepMaximum -or $stepMaximum -gt [int]::MaxValue) {
-        throw 'No se pudo acotar un periodo BDVE coherente.'
-    }
-
-    $endLowerBounds = [long[]]::new($encryptedToPlain.Count)
-    $endUpperBounds = [long[]]::new($encryptedToPlain.Count)
-    for ($index = 0; $index -lt $encryptedToPlain.Count; $index++) {
-        $endLowerBounds[$index] = [long]$encryptedToPlain[$index].Lower
-        $endUpperBounds[$index] = [long]$encryptedToPlain[$index].Upper
-    }
-
-    Initialize-RecoveryType
-    $recovered = [BdveParameterRecovery]::Recover(
+    $recovered = [BdvePattern]::Recover(
         $ConfigHash,
         $Key,
-        [int]$stepMinimum,
-        [int]$stepMaximum,
-        $endLowerBounds,
-        $endUpperBounds,
-        20000000
+        [long[]]@($orderedStates | ForEach-Object { $_.Position }),
+        [bool[]]@($orderedStates | ForEach-Object { $_.State -eq 'E' })
     )
     if ($recovered.Length -ne 3) {
         throw 'Las transiciones no produjeron parametros que coincidan con la huella SHA-256 de BDVE.'
@@ -575,7 +451,7 @@ function Find-BdveParameters {
         Key = [int]$Key
         CandidatesTested = $recovered[2]
         DefinitePackets = $orderedStates.Count
-        Cycles = $plainToEncrypted.Count
+        Cycles = [Math]::Floor($orderedStates[-1].Position / $recovered[0])
     }
 }
 

@@ -1,3 +1,8 @@
+export function formatActionError(reason: unknown, fallback: string): string {
+  if (!(reason instanceof Error)) return fallback
+  return reason.message.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/u, '').trim() || fallback
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`

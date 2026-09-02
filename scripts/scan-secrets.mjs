@@ -7,6 +7,7 @@ const files = output.toString('utf8').split('\0').filter(Boolean)
 const textExtensions = new Set([
   '',
   '.cjs',
+  '.cs',
   '.css',
   '.html',
   '.js',

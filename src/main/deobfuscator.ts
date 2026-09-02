@@ -84,6 +84,8 @@ function usefulErrorLine(output: string): string | null {
 }
 
 export function deobfuscationError(error: Error, stdout: string, stderr: string): Error {
+  const marked = /(?:^|\n)BDVE_ERROR: ([^\r\n]+)/u.exec(stderr)?.[1]
+  if (marked) return new Error(marked.trim())
   const detail = usefulErrorLine(stderr) ?? usefulErrorLine(stdout)
   return new Error(detail ?? `No se pudo desofuscar el video: ${error.message}`)
 }

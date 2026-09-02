@@ -99,3 +99,17 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-08-31.
 - Decision: versionar `.gitattributes` con `* text=auto eol=lf` y marcar ICO como binario. Mantener Prettier con su salida LF canonica en lugar de relajar `endOfLine` a `auto`.
 - Motivo: el primer run publico convirtio el checkout a CRLF y Prettier marco 42 archivos aunque el mismo commit pasaba localmente; normalizar desde Git hace reproducible el control sin ocultar diferencias reales de formato.
+
+## D-015 - Diagnostico de indices MP4 parcialmente ofuscados
+
+- Estado: vigente como restriccion conocida; correccion funcional pendiente de solicitud.
+- Fecha: 2026-09-02.
+- Decision: no interpretar `ffprobe no pudo leer la tabla de muestras` como prueba de dano irreversible ni como rechazo general a HEVC. Ante este fallo, inspeccionar si la ofuscacion alcanza el `moov` final; la siguiente mejora del detector debe contemplar ese caso y conservar los detalles utiles de stderr.
+- Motivo: se reprodujo el fallo en una copia de analisis y se encontraron entradas STSC y cabeceras `stsz`/`udta` aun ofuscadas, que recuperan valores coherentes con la misma clave XOR. La rutina vigente solo restaura los bytes anteriores a `mdat`.
+
+## D-016 - Recuperacion con indice parcial y muestras dispersas
+
+- Estado: vigente; resuelve la limitacion D-015 desde 0.6.1 por pedido explicito.
+- Fecha: 2026-09-02.
+- Decision: mantener ffprobe como primera via y usar un lector MP4 acotado sobre pistas de video intactas cuando falla. Derivar el patron de residuos de posiciones, sin asumir una transicion observada por ciclo ni que la primera muestra pertenezca al primer bloque. Exigir coincidencia SHA-256 y remux/decodificacion final; todas las pistas originales siguen incluidas. Publicar errores con marcador estructurado desde PowerShell y retirar el envoltorio IPC en la UI.
+- Motivo: el HEVC real tenia el audio parcialmente ofuscado y un periodo menor que muchos paquetes. Se recupero con periodo 23747, longitud 8656 y clave 0x6e; 817 fotogramas HEVC y AAC completos, con SHA-256 original sin cambios. Regresiones sinteticas ejecutan los auxiliares reales, sin publicar contenido personal.

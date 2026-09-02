@@ -30,6 +30,7 @@ La interfaz incluye estados de carga, resultado, vacio y error recuperable. Las 
 - El fallback de analisis lee unicamente el JSON de metadata que CapCut ya genero para el mismo nombre hash.
 - El revelado resuelve rutas reales, exige un `.mp4` existente, rechaza `*.alpha.mp4` y limita el archivo a una raiz interna conocida.
 - La desofuscacion usa el `ffprobe` empaquetado y el `ffmpeg`/`libvecrptor.dll` de la instalacion local de CapCut. El nombre opcional se valida contra las reglas de Windows y la app busca una ruta libre antes de empezar; nunca sobrescribe una salida anterior. Escribe primero archivos temporales junto a la salida y solo publica el destino despues de validar toda la decodificacion.
+- Desde 0.6.1, si una parte del indice `moov` sigue ofuscada, el detector obtiene posiciones desde las tablas de una pista de video intacta. Valida tamanos, limites, offsets y conteos, admite `stco`/`co64` y no elimina pistas de la salida. El patron tolera que una muestra salte varios bloques y solo se acepta si coincide exactamente con la huella SHA-256 BDVE.
 - El vaciado deriva la carpeta desde el MP4 real ya validado; el renderer no puede solicitar una carpeta arbitraria. Vuelve a validar el archivo despues de la confirmacion, envia cada hijo a la Papelera y nunca envia la carpeta contenedora.
 - Las dos mutaciones son mutuamente excluyentes. Si la ventana se cierra durante la desofuscacion, se detiene el arbol de procesos que pertenece a la app.
 - Se omiten enlaces simbolicos durante el escaneo y se bloquean permisos del navegador.
@@ -70,6 +71,8 @@ npm run audit
 
 `test:coverage` exige 100% de lineas, ramas, funciones y sentencias sobre el nucleo de deteccion, analisis, desofuscacion, configuracion de salida, nombres, vaciado y formateo. La suite de componentes cubre los estados visibles y el smoke E2E recorre la aplicacion Electron real con un arbol CapCut sintetico, incluido el selector de salida, la fila unica de acciones y la cancelacion segura del vaciado.
 
+La cobertura V8 mide el codigo TypeScript indicado en `vitest.config.ts`, no PowerShell, C#, los binarios externos ni el cableado Electron. La suite rapida tambien compila y ejecuta los auxiliares C# reales mediante Windows PowerShell, con 126 comprobaciones sobre MP4 sinteticos: indice parcialmente ofuscado, offsets de 32/64 bits, tamanos fijos/variables, tablas invalidas, limites, ciclos omitidos y huella incorrecta. No requiere instalar CapCut ni incluye videos personales. La recuperacion real y la decodificacion multimedia completa se validan localmente con CapCut; no forman parte del CI automatico.
+
 El flujo `Calidad` ejecuta el conjunto rapido en cada push y pull request con cache, timeout y cancelacion de ejecuciones superadas. El flujo costoso `E2E y portable de Windows` se inicia manualmente desde GitHub Actions; conserva el portable solo tres dias.
 
 ## Build y acceso de Windows
@@ -85,7 +88,7 @@ Apps Dashboard no se modifica: su contrato actual solo registra proyectos movile
 
 ## Versionado
 
-La version canonica vive en `package.json` y usa SemVer. Todo cambio que afecte `src/`, el build o el icono debe incrementar la version. `npm run check:version` valida esa regla respecto del commit base disponible.
+La version canonica vive en `package.json` y usa SemVer. Todo cambio que afecte `src/`, `resources/`, el build o el icono debe incrementar la version. `npm run check:version` valida esa regla respecto del commit base disponible y exige que el lockfile tenga la misma version.
 
 ## Limitaciones
 
@@ -93,5 +96,6 @@ La version canonica vive en `package.json` y usa SemVer. Todo cambio que afecte 
 - La app identifica archivos por extension, ubicacion y fecha; no interpreta el proyecto ni garantiza que el MP4 corresponda a una exportacion final.
 - Algunos caches de CapCut no incluyen el bloque `moov` o aun no estan finalizados; si tampoco existe un indice local valido, no hay metadata de codec confiable para mostrar.
 - El detector automatico admite archivos BDVE version 1 con ofuscacion XOR tipo 3 y suficientes alternancias H.264/H.265/AAC. Otras variantes se rechazan sin modificar el original.
+- El fallback necesita al menos una tabla de video intacta, no fragmentada y compatible (H.264/HEVC). Limita el indice a 64 MiB y un millon de muestras por pista. No intenta adivinar tablas danadas. La busqueda limita el periodo a 20 millones de bytes, las comprobaciones a 200 millones y los candidatos SHA-256 a 20 millones; si no hay evidencia suficiente, informa el limite y conserva el original.
 - La recuperacion necesita una instalacion local de CapCut que incluya `ffmpeg.exe` junto a `libvecrptor.dll`.
 - `Limpiar carpeta` afecta cualquier archivo o subcarpeta que exista dentro de la carpeta confirmada. La recuperacion depende de la disponibilidad de la Papelera de Windows.
