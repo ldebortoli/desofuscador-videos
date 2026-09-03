@@ -8,6 +8,7 @@ No hay tareas en curso.
 
 # DONE
 
+- [2026-09-02] Entregar 0.6.2 con salida H.264 High/avc1/yuv420p predeterminada, audio sin recomprimir y validacion de todas las pistas. Clip real con 817 cuadros, audio identico y miniatura Windows 144x256; regresion H.264 anterior y E2E desarrollo/paquete correctos. 55 pruebas, 100% cobertura TypeScript, 126 comprobaciones C# y 34 PowerShell; portable y acceso actualizados.
 - [2026-09-02] Diagnosticar miniaturas: las dos salidas recientes son HEVC Main 10/hvc1/yuv420p10le. IShellItemImageFactory con THUMBNAILONLY genera bitmap para un H.264 de la misma carpeta y falla con 0x8004B200 en ambas salidas HEVC. IconsOnly=0 y Windows PowerShell 5.1 confirma que no hay paquete HEVC registrado para el usuario. Sin conversiones, instalaciones ni cambios de configuracion; explicar compatibilidad de Windows y preservacion del codec.
 - [2026-09-02] Entregar 0.6.1: lector de tablas de video intactas para indices parcialmente ofuscados, deteccion compatible con ciclos omitidos, errores claros, 54 pruebas/100% cobertura TypeScript y 126 comprobaciones nativas, regresiones reales HEVC/H.264 y E2E de desarrollo/paquete correctos. Portable y acceso actualizados; copia recuperada con audio en Cortos y original intacto.
 - [2026-09-02] Diagnosticar el fallo de lectura de muestras en un recurso HEVC: la copia de analisis restaura solo el prefijo anterior a `mdat`, pero parte del `moov` final sigue ofuscada y ffprobe rechaza STSC/STCO. Se verificaron palabras y cabeceras XOR en memoria, sin modificar el original ni implementar cambios funcionales.
@@ -26,4 +27,4 @@ No hay tareas en curso.
 
 # BLOCKED
 
-- [P2] [BLOCKED: el usuario detuvo Computer Use con Escape; no retomar inputs en este turno] Verificacion visual del lanzamiento final del acceso 0.6.1 e identidad de ventana/taskbar. Propiedades de target/icono verificadas y E2E del paquete aprobado. Captura nativa ademas incompatible (0x80004002); usar Electron para capturas.
+- [P2] [BLOCKED: Computer Use devuelve coordinate input geometry is unavailable al abrir el acceso; los atajos de foco no muestran efecto verificable] Verificacion manual del acceso 0.6.2 e identidad de ventana/taskbar. Target/icono/version verificados y E2E del paquete aprobado. Captura nativa incompatible (0x80004002); usar Electron para capturas. Ultimo intento septiembre 2026; no insistir con el clic sin cambio del mecanismo/configuracion.

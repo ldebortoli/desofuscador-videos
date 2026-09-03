@@ -468,7 +468,7 @@ function FileResult({
             placeholder="Ej. corto-verano"
             onChange={(event) => onOutputNameChange(event.target.value)}
           />
-          <small>Puede escribirse con o sin .mp4.</small>
+          <small>Salida MP4 / H.264 de 8 bits. Nombre con o sin .mp4.</small>
         </label>
         <div className="output-destination">
           <span>CARPETA DE SALIDA</span>
@@ -514,7 +514,12 @@ function FileResult({
           <FolderOpen size={17} />
           {openingOutputFolder ? 'Abriendo...' : 'Abrir salida'}
         </button>
-        <button className="button button-secondary" disabled={busy} onClick={() => void onDeobfuscate(file)}>
+        <button
+          className="button button-secondary"
+          disabled={busy}
+          title="Recuperar y convertir a H.264; puede tardar unos minutos"
+          onClick={() => void onDeobfuscate(file)}
+        >
           {deobfuscating ? <RefreshCw className="spinning" size={17} /> : <Sparkles size={17} />}
           {deobfuscating ? 'Desofuscando...' : 'Desofuscar'}
         </button>

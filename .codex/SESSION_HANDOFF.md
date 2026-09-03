@@ -6,6 +6,22 @@ Entregar una aplicacion Windows independiente para detectar el MP4 interno mas r
 
 ## Tarea actual
 
+Entrega 0.6.2 completada: salida H.264 predeterminada, validacion real de miniatura/codec/audio, tests, portable y acceso actualizados. Codigo y memoria se publican en origin/main; no esperar ni monitorear CI. La verificacion manual del acceso permanece bloqueada por el mecanismo Computer Use, no por un fallo del paquete (E2E aprobado).
+
+## Validacion 0.6.2
+
+- Perfil centralizado en resources/H264Output.ps1: h264_mf software, calidad 90, perfil High (100), avc1/yuv420p; audio copiado, timestamps conservados y padding minimo para dimensiones pares. Verifica todas las pistas de video y decodifica todo el video/audio antes de guardar.
+- CapCut 9.4.0.4006 incluye h264_mf pero no libx264. Se uso el encoder de Windows para no agregar dependencias ni exigir una GPU particular. Conversion con perdida documentada; no prometer identica calidad o tamano.
+- Clip entregado: `%USERPROFILE%/Videos/Cortos/9dd88057da9b3602a15d89b0abd06e65_h264.mp4`, 47930845 bytes, SHA-256 56332EA1372369397711FB11C6A742ABC530A4319A74A0B1F75E80B010AE6ACD.
+- ffprobe confirma H.264 High, avc1, yuv420p, 1080x1920/30fps, 817 fotogramas y 27.237007 s con AAC. Hash de paquetes de audio identico a la copia HEVC: 759e232cd7b24af7f951443a9a1ddb011747476f9b466e8ef9d1b03f0770cd27. SHA-256 original sin cambios.
+- IShellItemImageFactory con THUMBNAILONLY genero miniatura real 144x256. Captura `.codex/qa-h264-thumbnail.png` revisada; no publicar ese contenido personal.
+- Script empaquetado probado tambien con recurso H.264 anterior: salida H.264/yuv420p de 351 cuadros y decodificacion completa. Copia temporal retirada tras comprobar su hash; salidas previas de Cortos intactas.
+- Quality, audit runtime (0 vulnerabilidades), 55/55 pruebas, 100% cobertura V8 del nucleo TypeScript (mismas 270 sentencias/239 ramas/68 funciones/228 lineas), 126 comprobaciones C# y 34 PowerShell del nuevo perfil.
+- E2E desarrollo y win-unpacked aprobados, incluyendo texto de salida H.264, error/reintento, acciones en una fila, destino configurable y limpieza cancelada. Captura qa-actions revisada.
+- Portable 0.6.2: 111086247 bytes, SHA-256 716E7879FE60A534A872EBCBF4A9AC63E6FCFB8F835C3E12107DDB1FA35C3563. Acceso e icono apuntan a ese artefacto; ProductVersion 0.6.2 verificada.
+- Computer Use leyo el acceso en Explorer, pero el clic por elemento devolvio coordinate input geometry is unavailable; Ctrl+L/Alt+D no mostraron cambio de foco verificable. No insistir. Ultimo intento septiembre 2026; usar E2E/API como fallback. La captura nativa sigue incompatible y no se volvio a intentar.
+- Secret Scanning/Push Protection habilitados; autor noreply conservado. No se ejecutaron workflows remotos costosos ni se monitoreo CI.
+
 Consulta posterior sobre miniaturas diagnosticada (2026-09-02), sin cambios de aplicacion ni Windows: los dos MP4 recuperados en Cortos son HEVC Main 10/hvc1 de 10 bits. La API de miniaturas de Windows devuelve bitmap para H.264 y 0x8004B200 para ambos HEVC. IconsOnly=0; Get-AppxPackage ejecutado explicitamente en Windows PowerShell 5.1 no encuentra paquetes HEVC del usuario. No afirmar que falta una imagen embebida: Windows extrae fotogramas y requiere soporte del codec. La app conserva el codec con -c copy. No instalar codecs ni convertir videos sin pedido. Get-AppxPackage no funciona en este host PowerShell 7; usar el ejecutable completo WindowsPowerShell/v1.0/powershell.exe para esa consulta.
 
 Correccion 0.6.1 implementada, validada, empaquetada y acceso actualizado. La entrega se publica en origin/main; no monitorear CI en este pedido. Verificacion visual final del acceso bloqueada por interrupcion del usuario de Computer Use; no retomar inputs en este turno.
@@ -47,13 +63,13 @@ Resuelto el caso de la captura: el audio tenia parte del indice XOR y los paquet
 - Validacion actual 0.6.1 detallada arriba; quality completo y escaneo de 65 archivos sin hallazgos.
 - E2E Electron paso en desarrollo y contra `release/win-unpacked`: verifico selector/persistencia de salida, fila unica, nombre opcional, revelado, copia y cancelacion del vaciado; la vista compacta no desborda horizontalmente.
 - El paquete real valido el hash observado con estado `Interno CapCut` y metadata H.264/AAC; captura revisada en `.codex/qa-actual-media.png`.
-- Portable: `release/Desofuscador-Videos-0.6.1-x64.exe`, 111093673 bytes, ProductVersion 0.6.1, SHA-256 `EFD40CAEE6BBD99A7667EC2B84F9CA69536127C14AB0DCE07722B260E5E72D7F`.
-- Acceso real: `%USERPROFILE%\Documents\Codex\CODEX APPS\Desofuscador Videos.lnk`; target e icono apuntan al portable 0.6.1 y fueron verificados. AppUserModelID estable `com.local.desofuscadorvideos`. No se relanzo tras Escape. Las dos copias temporales de regresion se retiraron despues de verificar sus hashes; se conserva la salida de Cortos.
+- Portable actual: `release/Desofuscador-Videos-0.6.2-x64.exe`; detalles de version y hash en Validacion 0.6.2.
+- Acceso real: `%USERPROFILE%\Documents\Codex\CODEX APPS\Desofuscador Videos.lnk`; target e icono apuntan al portable 0.6.2 y fueron verificados. AppUserModelID estable `com.local.desofuscadorvideos`. Apertura manual bloqueada por Computer Use; E2E del paquete aprobado.
 - CI: `Calidad` corre en push/PR; `E2E y portable de Windows` es manual, con timeout, cache, concurrencia cancelable y retencion de tres dias. No monitorear CI tras el push salvo pedido explicito.
 
 ## Proximos pasos
 
-1. Ante una nueva solicitud, verificar lanzamiento final del acceso 0.6.1 con permiso para retomar control de ventanas. No repetir la captura Windows incompatible durante el run.
+1. Verificar apertura manual del acceso 0.6.2 cuando cambie el mecanismo de control o el usuario pueda comprobarlo. Respetar el presupuesto de reintentos de captura/clic incompatible.
 2. Si CapCut cambia rutas internas, actualizar las definiciones centralizadas y sus pruebas.
 
 ## Riesgos

@@ -8,8 +8,8 @@ Detecta la clave comparando la cabecera cifrada con la caja MP4 obligatoria
 Admite indices parcialmente ofuscados y saltos de varios bloques entre muestras.
 Acota el periodo y la longitud con los estados claro/XOR, y acepta los parametros
 solo si SHA-256(periodo_be + longitud_be + clave) coincide con la huella crpt
-guardada en la caja bdve. Finalmente usa el descifrador local de CapCut, copia
-los streams sin recodificarlos y decodifica la salida completa como validacion.
+guardada en la caja bdve. Finalmente usa el descifrador local de CapCut, convierte
+el video a H.264 de 8 bits, conserva el audio y valida la salida completa.
 
 .EXAMPLE
 powershell -ExecutionPolicy Bypass -File .\Desofuscar-Video.ps1 .\clip.mp4
@@ -37,6 +37,8 @@ trap {
     [Console]::Error.WriteLine('BDVE_ERROR: ' + ($_.Exception.Message -replace '[\r\n]+', ' '))
     exit 1
 }
+
+. (Join-Path $PSScriptRoot 'H264Output.ps1')
 
 function Read-UInt32BigEndian {
     param(
@@ -502,25 +504,35 @@ try {
     Write-Host "Periodo detectado: $($parameters.Step) bytes"
     Write-Host "Longitud XOR: $($parameters.Length) bytes por periodo"
     Write-Host "Paquetes usados: $($parameters.DefinitePackets); ciclos: $($parameters.Cycles)"
-    Write-Host 'Desofuscando sin recodificar audio ni video...'
+    Write-Host 'Desofuscando y convirtiendo a H.264 de 8 bits; el audio se conserva...'
 
-    $conversionResult = Invoke-NativeTool -FilePath $ffmpeg -ArgumentList @(
-        '-hide_banner', '-loglevel', 'warning',
+    $conversionArguments = @(
+        '-hide_banner', '-loglevel', 'warning', '-nostdin', '-xerror',
         '-decryptor_step', [string]$parameters.Step,
         '-decryptor_length', [string]$parameters.Length,
         '-decryptor_key', [string]$parameters.Key,
-        '-i', $resolvedInput,
-        '-map', '0', '-c', 'copy', '-movflags', '+faststart', '-y', $temporaryOutput
+        '-i', $resolvedInput
     )
+    $conversionArguments += Get-H264OutputArguments
+    $conversionArguments += @('-y', $temporaryOutput)
+    $conversionResult = Invoke-NativeTool -FilePath $ffmpeg -ArgumentList $conversionArguments
     if ($conversionResult.ExitCode -ne 0) {
-        throw "CapCut/FFmpeg no pudo desofuscar el video:`n$($conversionResult.Output -join [Environment]::NewLine)"
+        throw "CapCut/FFmpeg no pudo convertir el video a H.264. Se necesita el codificador h264_mf de Windows:`n$($conversionResult.Output -join [Environment]::NewLine)"
     }
+
+    $outputProbe = Invoke-NativeTool -FilePath $ffprobe -ArgumentList @(
+        '-v', 'quiet', '-show_streams',
+        '-show_entries', 'stream=codec_type,codec_name,codec_tag_string,pix_fmt,width,height',
+        '-of', 'json', $temporaryOutput
+    )
+    if ($outputProbe.ExitCode -ne 0) { throw 'No se pudo verificar el MP4 convertido a H.264.' }
+    Assert-H264Output -ProbeJson ($outputProbe.Output -join [Environment]::NewLine)
 
     Write-Host 'Validando la decodificacion completa...'
     $validationResult = Invoke-NativeTool -FilePath $ffmpeg -ArgumentList @(
         '-hide_banner', '-loglevel', 'error', '-xerror',
         '-i', $temporaryOutput,
-        '-map', '0:v:0', '-map', '0:a:0?', '-f', 'null', 'NUL'
+        '-map', '0:v', '-map', '0:a?', '-f', 'null', 'NUL'
     )
     if ($validationResult.ExitCode -ne 0) {
         throw "La validacion detecto datos multimedia danados:`n$($validationResult.Output -join [Environment]::NewLine)"

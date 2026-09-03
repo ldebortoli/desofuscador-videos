@@ -113,6 +113,7 @@ describe('interfaz principal', () => {
     expect(screen.getByText('2.5 MB')).toBeInTheDocument()
     expect(screen.getByTestId('media-analysis-status')).toHaveTextContent('Analizado')
     expect(screen.getByText('H.264 / AVC')).toBeInTheDocument()
+    expect(screen.getByText('Salida MP4 / H.264 de 8 bits. Nombre con o sin .mp4.')).toBeInTheDocument()
     expect(screen.getByText('1920 x 1080')).toBeInTheDocument()
     expect(screen.getByText('29.97 FPS')).toBeInTheDocument()
     expect(screen.getByText('1:02')).toBeInTheDocument()

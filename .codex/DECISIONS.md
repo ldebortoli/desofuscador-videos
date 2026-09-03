@@ -120,3 +120,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-09-02.
 - Decision: no confundir falta de miniatura del Explorador con fallo de recuperacion ni agregar recodificacion automaticamente. La salida vigente usa copia de streams para conservar calidad. Instalar soporte HEVC o agregar una salida H.264 requiere un pedido de cambio.
 - Motivo: se verifico que el generador de miniaturas de Windows funciona con H.264 de la misma carpeta pero falla con ambos HEVC Main 10 recuperados; no hay extension HEVC registrada para el usuario y las miniaturas no estan desactivadas globalmente. Los MP4 ya habian pasado decodificacion completa.
+
+## D-018 - Salida H.264 compatible predeterminada
+
+- Estado: vigente desde 0.6.2, reemplaza la conservacion del codec de video de D-017 por pedido explicito.
+- Fecha: 2026-09-02.
+- Decision: convertir todas las pistas de video a H.264 High/avc1/yuv420p, usar h264_mf en modo software (sin depender de GPU) y calidad 90/100, conservar audio y timestamps, y agregar hasta un pixel de padding para dimensiones impares. Validar codec/bit depth y decodificacion completa antes de publicar. No reemplazar salidas existentes ni entregar HEVC si la conversion falla.
+- Motivo: CapCut incluye h264_mf pero no libx264 en la instalacion comprobada. La salida real conserva 817 cuadros a 1080x1920/30fps, audio identico por hash y genera una miniatura Windows 144x256 donde el HEVC fallaba. La recompresion es con perdida y puede aumentar el tamano/tiempo; documentarlo sin prometer calidad identica.

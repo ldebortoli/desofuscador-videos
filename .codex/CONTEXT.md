@@ -24,7 +24,7 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 ## Ejecucion y tests
 
 - `npm run quality`: lint, formato, tipos, version gate y escaneo local de secretos.
-- `npm run test:coverage`: 54/54 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo TypeScript medido, mas 126 comprobaciones sinteticas que ejecutan los auxiliares C# con Windows PowerShell.
+- `npm run test:coverage`: 55/55 pruebas; 100% lineas, ramas, funciones y sentencias en el nucleo TypeScript medido, mas 126 comprobaciones C# y 34 comprobaciones PowerShell del perfil/validacion H.264.
 - `npm run test:e2e`: Electron real con deteccion, selector de salida, fila unica de acciones, revelado, portapapeles, cancelacion segura del vaciado y capturas.
 - `npm run package`: portable Windows x64.
 - `npm run install:shortcut`: instala/verifica `Desofuscador Videos.lnk` en Codex Apps.
@@ -46,7 +46,8 @@ Aplicacion Windows independiente para localizar el MP4 interno mas reciente gene
 - Desde 0.5.0, la salida se fija en `%USERPROFILE%\Videos\Cortos`; la tarjeta muestra el destino, acepta un nombre opcional validado, evita sobrescrituras con sufijos y permite abrir la carpeta.
 - Desde 0.6.0, el producto se llama `Desofuscador Videos`; las cinco acciones ocupan una sola fila y la carpeta de salida puede elegirse con un dialogo nativo. La preferencia se guarda localmente y conserva `%USERPROFILE%\Videos\Cortos` como valor inicial.
 - Desde 0.6.1, el detector admite `moov` parcialmente ofuscado si conserva una pista de video intacta; la busqueda por residuos admite ciclos omitidos entre muestras y exige la huella SHA-256 antes del remux completo. Los auxiliares `BdveMp4Index.cs` y `BdvePattern.cs` se empaquetan junto al script PowerShell.
-- El portable actual vive en `release/Desofuscador-Videos-0.6.1-x64.exe`; la carpeta `release/` no se versiona.
+- Desde 0.6.2, todas las salidas se convierten a H.264 High de 8 bits (avc1/yuv420p) con h264_mf en modo software y calidad 90. Se copia el audio, se verifica el codec y se decodifican todas las pistas antes de publicar. Los originales y salidas previas se conservan. El perfil esta centralizado en resources/H264Output.ps1.
+- El portable actual vive en `release/Desofuscador-Videos-0.6.2-x64.exe`; la carpeta `release/` no se versiona.
 - GitHub ejecuta calidad y cobertura en push/PR. E2E y empaquetado quedan en un workflow manual para proteger cuota.
 - `.gitattributes` fija LF en archivos de texto para que Prettier reciba el mismo contenido en checkouts Windows y locales.
 - Si el proyecto tiene una UI para controlar un bot, servidor o proceso en segundo plano, cerrar esa UI debe detener el proceso administrado cuando sea tecnicamente posible.

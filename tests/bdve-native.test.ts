@@ -3,6 +3,22 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
+test('el perfil de salida convierte a H.264 de 8 bits y rechaza formatos incompatibles', () => {
+  const output = execFileSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      resolve('tests/h264-output-regression.ps1')
+    ],
+    { encoding: 'utf8', windowsHide: true, timeout: 10_000 }
+  )
+  expect(output).toContain('H264 output regression OK:')
+}, 15_000)
+
 test('compila y prueba el lector MP4 y el detector real en Windows PowerShell', () => {
   const output = execFileSync(
     'powershell.exe',

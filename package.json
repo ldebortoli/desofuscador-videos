@@ -1,6 +1,6 @@
 {
   "name": "desofuscador-videos",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Aplicacion Windows para localizar, analizar y recuperar MP4 internos de CapCut",
   "main": "./out/main/index.js",
   "author": "Lucas De Bortoli",
@@ -65,6 +65,10 @@
       "node_modules/@ffprobe-installer/win32-x64/ffprobe.exe"
     ],
     "extraResources": [
+      {
+        "from": "resources/H264Output.ps1",
+        "to": "tools/H264Output.ps1"
+      },
       {
         "from": "resources/Desofuscar-Video.ps1",
         "to": "tools/Desofuscar-Video.ps1"
