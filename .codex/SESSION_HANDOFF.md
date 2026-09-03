@@ -6,6 +6,21 @@ Entregar una aplicacion Windows independiente para detectar el MP4 interno mas r
 
 ## Tarea actual
 
+Nuevo error diagnosticado (2026-09-02): el recurso 22db4cd1f758f7d078a030b722e7dc0b.mp4 tiene el indice moov completamente XOR. No es un fallo de conversion H.264. El pedido actual solo informa el error, por lo que no se implemento una correccion ni se genero otra salida. Ampliacion del detector pendiente de pedido explicito; app, portable y acceso siguen en 0.6.2. Publicar solamente esta memoria, sin monitorear CI.
+
+### Evidencia del nuevo recurso
+
+- Original de Combination/Resources: 28259073 bytes; SHA-256 antes/despues 5669933B8D3D6893BBDF16EBFE04DC387C879BB75B9093191DCF458DE1D4C0B8.
+- BDVE v1/tipo 3, clave 0x9b y huella de configuracion 60A5D1503FFDAF964CEF86C765D8FCF36BDB1025A63F3E0888AD05A4B1513263.
+- mdat en offset 36, tamano 28243097 y payload desde 44. moov en 28243133, tamano 15872; bdve desde 28259005.
+- BdveMp4Index.Read rechaza ambas pistas: Not an intact video track. Las cabeceras admiten XOR, pero ReadTrack exige el valor vide y las tablas en claro. Todo el moov, incluido hdlr/stsd/stsc/stsz/stco, esta XOR.
+- Restaurando exclusivamente un buffer en memoria con la clave, ReadTrack valida 817 paquetes HEVC. Get-PacketState clasifica los 817; BdvePattern.Recover confirma periodo 275845 y longitud 142572 mediante la huella exacta (1489 candidatos). Todo el moov ocupa residuos 106943..122814, dentro de la longitud XOR: confirma la hipotesis del indice completo, no solo sus cabeceras.
+- FFmpeg local, con esos parametros y salida null, decodifica los 817 cuadros de 1080x1920/30fps y AAC estereo 44100 Hz, duracion 27.24 s, exit 0; metadata mp4_data_incomplete=false. No se escribieron copias ni temporales multimedia ni se altero el original.
+- Validacion de esta entrega solo documental: git diff --check y scan:secrets correctos; 55/55 pruebas y cobertura V8 100% (270 sentencias, 239 ramas, 68 funciones, 228 lineas). USER_QUEUE sigue vacia; no se incremento version ni se ejecuto empaquetado.
+- Siguiente implementacion posible: aceptar una pista validada en una vista XOR del indice ademas de la vista actual, sin descartar pistas claras ya aceptadas, sin duplicarlas, y manteniendo limites/huella/validacion final. Agregar pruebas sinteticas de moov completamente XOR y mixto; evitar afirmar soporte para cualquier variante. Incrementar a 0.6.3 solo si se autoriza y entrega cambio funcional.
+
+## Entrega anterior
+
 Entrega 0.6.2 completada: salida H.264 predeterminada, validacion real de miniatura/codec/audio, tests, portable y acceso actualizados. Codigo y memoria se publican en origin/main; no esperar ni monitorear CI. La verificacion manual del acceso permanece bloqueada por el mecanismo Computer Use, no por un fallo del paquete (E2E aprobado).
 
 ## Validacion 0.6.2
@@ -69,8 +84,9 @@ Resuelto el caso de la captura: el audio tenia parte del indice XOR y los paquet
 
 ## Proximos pasos
 
-1. Verificar apertura manual del acceso 0.6.2 cuando cambie el mecanismo de control o el usuario pueda comprobarlo. Respetar el presupuesto de reintentos de captura/clic incompatible.
-2. Si CapCut cambia rutas internas, actualizar las definiciones centralizadas y sus pruebas.
+1. Si el usuario pide corregir el nuevo error, ampliar el fallback al indice totalmente XOR y probar el nuevo recurso, los dos anteriores y regresiones sinteticas; conservar la salida H.264.
+2. Verificar apertura manual del acceso 0.6.2 cuando cambie el mecanismo de control o el usuario pueda comprobarlo. Respetar el presupuesto de reintentos de captura/clic incompatible.
+3. Si CapCut cambia rutas internas, actualizar las definiciones centralizadas y sus pruebas.
 
 ## Riesgos
 

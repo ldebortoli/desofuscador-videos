@@ -8,6 +8,7 @@ No hay tareas en curso.
 
 # DONE
 
+- [2026-09-02] Diagnosticar el nuevo rechazo de indice en 22db4cd1f758f7d078a030b722e7dc0b.mp4: todo el moov cae dentro de un bloque XOR. El lector 0.6.2 exige hdlr/tablas de video en claro y rechaza la pista antes de convertir. Restauracion exclusivamente en memoria, 817 muestras recuperadas, parametros verificados por SHA-256 y decodificacion completa de video/audio con salida null; original intacto. Sin cambios funcionales ni archivo de salida nuevo.
 - [2026-09-02] Entregar 0.6.2 con salida H.264 High/avc1/yuv420p predeterminada, audio sin recomprimir y validacion de todas las pistas. Clip real con 817 cuadros, audio identico y miniatura Windows 144x256; regresion H.264 anterior y E2E desarrollo/paquete correctos. 55 pruebas, 100% cobertura TypeScript, 126 comprobaciones C# y 34 PowerShell; portable y acceso actualizados.
 - [2026-09-02] Diagnosticar miniaturas: las dos salidas recientes son HEVC Main 10/hvc1/yuv420p10le. IShellItemImageFactory con THUMBNAILONLY genera bitmap para un H.264 de la misma carpeta y falla con 0x8004B200 en ambas salidas HEVC. IconsOnly=0 y Windows PowerShell 5.1 confirma que no hay paquete HEVC registrado para el usuario. Sin conversiones, instalaciones ni cambios de configuracion; explicar compatibilidad de Windows y preservacion del codec.
 - [2026-09-02] Entregar 0.6.1: lector de tablas de video intactas para indices parcialmente ofuscados, deteccion compatible con ciclos omitidos, errores claros, 54 pruebas/100% cobertura TypeScript y 126 comprobaciones nativas, regresiones reales HEVC/H.264 y E2E de desarrollo/paquete correctos. Portable y acceso actualizados; copia recuperada con audio en Cortos y original intacto.
@@ -27,4 +28,5 @@ No hay tareas en curso.
 
 # BLOCKED
 
+- [P1] [BLOCKED: falta pedido de implementacion; el mensaje actual solo reporta un nuevo error] Ampliar el lector para indices totalmente XOR ademas de pistas en claro, con validacion estructural, huella BDVE y regresiones sinteticas. Caso real diagnosticado y recuperable; conservar salida H.264 y original intacto. La app sigue en 0.6.2.
 - [P2] [BLOCKED: Computer Use devuelve coordinate input geometry is unavailable al abrir el acceso; los atajos de foco no muestran efecto verificable] Verificacion manual del acceso 0.6.2 e identidad de ventana/taskbar. Target/icono/version verificados y E2E del paquete aprobado. Captura nativa incompatible (0x80004002); usar Electron para capturas. Ultimo intento septiembre 2026; no insistir con el clic sin cambio del mecanismo/configuracion.

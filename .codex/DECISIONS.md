@@ -127,3 +127,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-09-02.
 - Decision: convertir todas las pistas de video a H.264 High/avc1/yuv420p, usar h264_mf en modo software (sin depender de GPU) y calidad 90/100, conservar audio y timestamps, y agregar hasta un pixel de padding para dimensiones impares. Validar codec/bit depth y decodificacion completa antes de publicar. No reemplazar salidas existentes ni entregar HEVC si la conversion falla.
 - Motivo: CapCut incluye h264_mf pero no libx264 en la instalacion comprobada. La salida real conserva 817 cuadros a 1080x1920/30fps, audio identico por hash y genera una miniatura Windows 144x256 donde el HEVC fallaba. La recompresion es con perdida y puede aumentar el tamano/tiempo; documentarlo sin prometer calidad identica.
+
+## D-019 - Diagnostico de indice totalmente XOR
+
+- Estado: diagnostico confirmado; ampliacion funcional pendiente de pedido.
+- Fecha: 2026-09-02.
+- Decision: el rechazo de tablas intactas no demuestra que el recurso este danado ni que falle H.264. Antes de declararlo irrecuperable, comprobar si todo el moov esta XOR; cualquier futura aceptacion debe validar la estructura y la huella de parametros, sin reemplazar datos a ciegas ni prometer soporte universal.
+- Motivo: el nuevo recurso tiene todo el indice dentro de un bloque ofuscado. Al restaurarlo solo en memoria, el lector existente recupera 817 paquetes y el detector encuentra una configuracion exacta por SHA-256; FFmpeg decodifica video y audio completos a null sin errores. No se cambio la app, el original ni las salidas.
