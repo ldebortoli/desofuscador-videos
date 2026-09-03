@@ -6,6 +6,8 @@ Entregar una aplicacion Windows independiente para detectar el MP4 interno mas r
 
 ## Tarea actual
 
+Consulta posterior sobre miniaturas diagnosticada (2026-09-02), sin cambios de aplicacion ni Windows: los dos MP4 recuperados en Cortos son HEVC Main 10/hvc1 de 10 bits. La API de miniaturas de Windows devuelve bitmap para H.264 y 0x8004B200 para ambos HEVC. IconsOnly=0; Get-AppxPackage ejecutado explicitamente en Windows PowerShell 5.1 no encuentra paquetes HEVC del usuario. No afirmar que falta una imagen embebida: Windows extrae fotogramas y requiere soporte del codec. La app conserva el codec con -c copy. No instalar codecs ni convertir videos sin pedido. Get-AppxPackage no funciona en este host PowerShell 7; usar el ejecutable completo WindowsPowerShell/v1.0/powershell.exe para esa consulta.
+
 Correccion 0.6.1 implementada, validada, empaquetada y acceso actualizado. La entrega se publica en origin/main; no monitorear CI en este pedido. Verificacion visual final del acceso bloqueada por interrupcion del usuario de Computer Use; no retomar inputs en este turno.
 
 Resuelto el caso de la captura: el audio tenia parte del indice XOR y los paquetes HEVC saltaban varios ciclos. El fallback lee tablas de video intactas; el detector usa residuos de posiciones sin asumir ciclos consecutivos. Solo acepta la configuracion verificada por SHA-256 y conserva todas las pistas en el remux final.

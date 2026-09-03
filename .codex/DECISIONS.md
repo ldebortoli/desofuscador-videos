@@ -113,3 +113,10 @@ No borrar decisiones anteriores. Si una decision cambia, agregar una nueva entra
 - Fecha: 2026-09-02.
 - Decision: mantener ffprobe como primera via y usar un lector MP4 acotado sobre pistas de video intactas cuando falla. Derivar el patron de residuos de posiciones, sin asumir una transicion observada por ciclo ni que la primera muestra pertenezca al primer bloque. Exigir coincidencia SHA-256 y remux/decodificacion final; todas las pistas originales siguen incluidas. Publicar errores con marcador estructurado desde PowerShell y retirar el envoltorio IPC en la UI.
 - Motivo: el HEVC real tenia el audio parcialmente ofuscado y un periodo menor que muchos paquetes. Se recupero con periodo 23747, longitud 8656 y clave 0x6e; 817 fotogramas HEVC y AAC completos, con SHA-256 original sin cambios. Regresiones sinteticas ejecutan los auxiliares reales, sin publicar contenido personal.
+
+## D-017 - Miniaturas de Windows y conservacion del codec
+
+- Estado: diagnostico vigente; sin cambio funcional.
+- Fecha: 2026-09-02.
+- Decision: no confundir falta de miniatura del Explorador con fallo de recuperacion ni agregar recodificacion automaticamente. La salida vigente usa copia de streams para conservar calidad. Instalar soporte HEVC o agregar una salida H.264 requiere un pedido de cambio.
+- Motivo: se verifico que el generador de miniaturas de Windows funciona con H.264 de la misma carpeta pero falla con ambos HEVC Main 10 recuperados; no hay extension HEVC registrada para el usuario y las miniaturas no estan desactivadas globalmente. Los MP4 ya habian pasado decodificacion completa.

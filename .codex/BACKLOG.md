@@ -8,6 +8,7 @@ No hay tareas en curso.
 
 # DONE
 
+- [2026-09-02] Diagnosticar miniaturas: las dos salidas recientes son HEVC Main 10/hvc1/yuv420p10le. IShellItemImageFactory con THUMBNAILONLY genera bitmap para un H.264 de la misma carpeta y falla con 0x8004B200 en ambas salidas HEVC. IconsOnly=0 y Windows PowerShell 5.1 confirma que no hay paquete HEVC registrado para el usuario. Sin conversiones, instalaciones ni cambios de configuracion; explicar compatibilidad de Windows y preservacion del codec.
 - [2026-09-02] Entregar 0.6.1: lector de tablas de video intactas para indices parcialmente ofuscados, deteccion compatible con ciclos omitidos, errores claros, 54 pruebas/100% cobertura TypeScript y 126 comprobaciones nativas, regresiones reales HEVC/H.264 y E2E de desarrollo/paquete correctos. Portable y acceso actualizados; copia recuperada con audio en Cortos y original intacto.
 - [2026-09-02] Diagnosticar el fallo de lectura de muestras en un recurso HEVC: la copia de analisis restaura solo el prefijo anterior a `mdat`, pero parte del `moov` final sigue ofuscada y ffprobe rechaza STSC/STCO. Se verificaron palabras y cabeceras XOR en memoria, sin modificar el original ni implementar cambios funcionales.
 - [2026-08-31] Corregir el CI publico: normalizar archivos de texto a LF con `.gitattributes`, reproducir un checkout Windows con `core.autocrlf=true` y confirmar el run `33404655940` completo en verde. Actualizar ademas las acciones oficiales a v7 para retirar la advertencia del runtime Node.js obsoleto.
